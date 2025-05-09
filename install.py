@@ -73,6 +73,8 @@ if latest_release_resp.status_code == 200:
     except Exception as _:
         print(f"{F.RED}Failed to install dependencies. Your installation might not be functional.{R}")
         sys.exit(1)
+        
+    print(f"{F.GREEN}Dependencies installed!{R}")
     
     print(f"{F.YELLOW}Cleaning up...{R}")
     
