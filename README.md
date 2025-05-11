@@ -1,6 +1,6 @@
 # WOS Bot Install Script
 
-An automatic install script for [wos-project/bot](https://github.com/wos-project/bot).
+An automatic install script for [whiteout-project/bot](https://github.com/whiteout-project/bot).
 
 > [!WARNING]
 > This repository is currently under development and may contain non-functional code.
