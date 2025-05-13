@@ -1,8 +1,15 @@
 import subprocess
-import colorama
-import requests
-import shutil
 import sys
+
+try:
+    import colorama
+    import requests
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    import colorama
+    import requests
+    
+import shutil
 import os
 
 def clean_up(path: str):
@@ -83,7 +90,7 @@ if latest_release_resp.status_code == 200:
     clean_up("LICENSE")
     clean_up("README.md")
         
-    os.remove("install.py")
+    clean_up("install.py")
     
     print(f"{F.GREEN}Cleanup complete!{R}")
     print(f"{F.GREEN}Installation complete! Run your bot with \"python3 main.py\"!{R}")
