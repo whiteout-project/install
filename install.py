@@ -46,7 +46,7 @@ if latest_release_resp.status_code == 200:
         f.write(download_resp.content)
         
     shutil.unpack_archive("package.zip", "package")
-    os.remove("package.zip")
+    clean_up("package.zip")
     
     path_name = os.listdir("package")[0]
     
@@ -58,8 +58,11 @@ if latest_release_resp.status_code == 200:
             shutil.copytree(src, dst, dirs_exist_ok=True)
         else:
             shutil.copy2(src, dst)
-            
-    shutil.rmtree("package")
+    
+    try:
+        shutil.rmtree("package")
+    except Exception as _:
+        print(f"{F.RED}Failed to remove \"package\" directory. Please remove it manually.{R}")
     
     print(f"{F.GREEN}Download complete!{R}")
     print(f"{F.YELLOW}Installing dependencies...{R}")
