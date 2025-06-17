@@ -25,7 +25,7 @@ WARNING, when you close the terminal or the computer your bot will go offline. Y
 Ubuntu/debian:
 11. If you have a specific folder you want to install go there otherwise type: mkdir wosbot && cd wosbot
 12. Type: apt update && upgrade -y
-13. Type: apt install python -y
+13. Type: apt install python3 -y
 14. Type: curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/main/install.py
 15. Type: python -m venv venv
 16. Type: python install.py and wait for the installtion to finish
