@@ -1,0 +1,42 @@
+How to use:
+
+Things you need to do before you start:
+1. Go to https://discord.com/developers/applications
+2. Create here a bot if you don't have it already
+3. Go to the hamburger menu (three lines top left corner) and click installation
+4. Set installation Contexts to Guild Install
+5. At default installation settings select the following scopes: applications.commands , bot
+6. At premmmisions select atleast the following premmmisions: Add Reactions, Administrator, Change Nickname, Embede Links, Mandage Channels, Manage Messages, Manage Roles, Mention Everyone, Read Messages History, Send Messages, Send TTS Messages, Use Embedded Activities, Use Slash Commands, View Channels, Manage Nicknames
+7. Click the hamburger menu again and go to Bot
+8. Go to token, click reset token and save this token in a file somewhere, you will need it later!!!
+9. Scroll down to Privileged Gateway Intents and make sure Server Members Intent and Message Content Intent are both enabled
+10. On this page you can change some stuff like your bots pfp and name when you are done with that continue to your operating systems part in this "guide"
+
+Windows: 
+11. Download windowsAutoRun.bat from https://github.com/whiteout-project/install
+12. Place auto windowsAutoRun.bat in any folder you prefer and run it
+13. Wait until it ask you for your discord bot Token and here you paste the token you saved in step 8
+14. When it says the bot is ready go back to the discord developer portal, click the hamburger menu and go to Installation
+15. Copy the install link, now you can close the discord delvoper portal. Paste the link in your browser.
+16.  Last thing to do is to be the first person in your discord server to type /settings and you are the admin
+
+WARNING, when you close the terminal or the computer your bot will go offline. You can minimalize the terminal window without any issues.
+
+Ubuntu/debian:
+11. If you have a specific folder you want to install go there otherwise type: mkdir wosbot && cd wosbot
+12. Type: apt update && upgrade -y
+13. Type: apt install python -y
+14. Type: curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/main/install.py
+15. Type: python -m venv venv
+16. Type: python install.py and wait for the installtion to finish
+17. Type: source ./venv/bin/activate
+18. Type: python main.py --autoupdate
+19. Wait until it ask you for your discord bot Token and here you paste the token you saved in step 8
+20. When it says the bot is ready go back to the discord developer portal, click the hamburger menu and go to Installation
+21. Copy the install link, now you can close the discord delvoper portal. Paste the link in your browser.
+22. Last thing to do is to be the first person in your discord server to type /settings and you are the admin
+
+WARNING, if you use ssh to start a session with your vps/ linux machine the bot will go offline when you turn off the session
+
+Android:
+Unfortunatly at this moment it's not possible to run the bot on android
