@@ -69,6 +69,8 @@ chmod +x ubuntu-fs/root/ubuntu_setup.sh
 chmod +x ubuntu-in-termux/startubuntu.sh
 chmod +x ubuntu-fs/root/wosbot.sh
 
+cd ubuntu-in-termux
+
 echo ""
 echo "✅ Ubuntu installed successfully!"
 echo "➡️ Next: run './startubuntu.sh'"
