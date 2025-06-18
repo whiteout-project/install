@@ -67,7 +67,7 @@ EOF
 
 chmod +x ubuntu-fs/root/ubuntu_setup.sh
 chmod +x ./startubuntu.sh
-chmod +x ./wosbot.sh
+chmod +x ubuntu-fs/root/wosbot.sh
 
 echo ""
 echo "✅ Ubuntu installed successfully!"
