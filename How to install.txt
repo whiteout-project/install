@@ -39,7 +39,8 @@ Ubuntu/debian:
 WARNING, if you use ssh to start a session with your vps/ linux machine the bot will go offline when you turn off the session
 
 Android:
-11. copy past the code below into your termux window
+11. Install termux from the playstore
+12. Copy past the code below into your termux window
 pkg update && pkg upgrade -y
 pkg install wget
 wget https://raw.githubusercontent.com/whiteout-project/install/main/installTermux.sh
