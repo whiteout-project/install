@@ -1,8 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Ensure Termux has the basics even on a clean install
-pkg update -y && pkg upgrade -y
-pkg install -y wget proot git curl
+pkg update && pkg upgrade -y
+pkg install -y wget proot git
 
 # Clone the Ubuntu installer repo
 cd ~
