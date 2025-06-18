@@ -1,24 +1,41 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Ensure Termux has the basics even on a clean install
-pkg update && pkg upgrade
-pkg install wget proot git
+set -e  # stop if any command fails
 
-# Clone the Ubuntu installer repo
+# Ensure proper environment paths (fixes fresh installs)
+export PATH=$PREFIX/bin:$PATH
+
+# Initial update & install essential packages
+yes | pkg update
+yes | pkg upgrade
+yes | pkg install proot wget git curl termux-tools
+
+# Confirm installation of required tools
+for cmd in git wget proot curl; do
+  if ! command -v $cmd > /dev/null 2>&1; then
+    echo "❌ $cmd not installed properly. Exiting."
+    exit 1
+  fi
+done
+
+# Clone and run Ubuntu installer
 cd ~
+rm -rf ubuntu-in-termux
 git clone https://github.com/MFDGaming/ubuntu-in-termux.git
 cd ubuntu-in-termux
 chmod +x ubuntu.sh
 ./ubuntu.sh -y
 
-# Create setup script inside Ubuntu
+# Write Ubuntu setup script
 cat > ubuntu-fs/root/ubuntu_setup.sh << 'EOF'
 #!/bin/bash
+
+set -e
 
 apt-get update && apt-get upgrade -y
 apt-get install -y curl nano python3 python3-venv python3-pip
 
-mkdir ~/wosbot && cd ~/wosbot
+mkdir -p ~/wosbot && cd ~/wosbot
 curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/main/install.py
 
 python3 -m venv venv
@@ -27,9 +44,9 @@ source venv/bin/activate
 python install.py -y
 
 if [ -f "main.py" ]; then
-    python main.py
+  python main.py
 else
-    echo "⚠️ main.py not found. Please make sure it's downloaded by install.py."
+  echo "⚠️ main.py not found. Please check install.py output."
 fi
 
 nano bot_token.txt
@@ -38,6 +55,6 @@ EOF
 chmod +x ubuntu-fs/root/ubuntu_setup.sh
 
 echo ""
-echo "✅ Ubuntu installed!"
-echo "➡️ To continue, run: ./startubuntu.sh"
-echo "➡️ Then inside Ubuntu, run: bash ubuntu_setup.sh"
+echo "✅ Ubuntu installed successfully!"
+echo "➡️ Next: run './startubuntu.sh'"
+echo "➡️ Inside Ubuntu, run: 'bash ubuntu_setup.sh'"
