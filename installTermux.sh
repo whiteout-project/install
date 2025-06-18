@@ -41,10 +41,10 @@ curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/ma
 python3 -m venv venv
 source venv/bin/activate
 
-python install.py -y
+python3 install.py -y
 
 if [ -f "main.py" ]; then
-  python main.py
+  python3 main.py
 else
   echo "⚠️ main.py not found. Please check install.py output."
 fi
@@ -52,8 +52,22 @@ fi
 nano bot_token.txt
 EOF
 
+cat > ubuntu-fs/root/wosbot.sh << 'EOF'
+#!/bin/bash
+
+if [ -f "main.py" ]; then
+  cd ~/wosbot
+  source ./venv/bin/activate
+  python3 main.py --autoupdate
+else
+  echo "⚠️ main.py not found. Please check your installation or run: python3 install.py."
+fi
+
+EOF
+
 chmod +x ubuntu-fs/root/ubuntu_setup.sh
 chmod +x ./startubuntu.sh
+chmod +x ./wosbot.sh
 
 echo ""
 echo "✅ Ubuntu installed successfully!"
