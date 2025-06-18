@@ -66,7 +66,7 @@ fi
 EOF
 
 chmod +x ubuntu-fs/root/ubuntu_setup.sh
-chmod +x ./startubuntu.sh
+chmod +x ubuntu-in-termux/startubuntu.sh
 chmod +x ubuntu-fs/root/wosbot.sh
 
 echo ""
