@@ -1,8 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Update Termux and install dependencies
-apt-get update && apt-get upgrade -y
-apt-get install -y wget proot git curl
+apt-get update && apt-get upgrade
+apt-get install wget proot git
+
 
 # Clone Ubuntu installer
 cd ~
