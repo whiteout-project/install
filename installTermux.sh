@@ -55,7 +55,7 @@ EOF
 cat > ubuntu-fs/root/wosbot.sh << 'EOF'
 #!/bin/bash
 
-if [ -f "main.py" ]; then
+if [ -f "~/wosbot/main.py" ]; then
   cd ~/wosbot
   source ./venv/bin/activate
   python3 main.py --autoupdate
