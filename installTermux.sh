@@ -1,18 +1,17 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Update Termux and install dependencies
-apt-get update && apt-get upgrade
-apt-get install wget proot git
+# Ensure Termux has the basics even on a clean install
+pkg update -y && pkg upgrade -y
+pkg install -y wget proot git curl
 
-
-# Clone Ubuntu installer
+# Clone the Ubuntu installer repo
 cd ~
 git clone https://github.com/MFDGaming/ubuntu-in-termux.git
 cd ubuntu-in-termux
 chmod +x ubuntu.sh
 ./ubuntu.sh -y
 
-# Write ubuntu_setup.sh into the Ubuntu root filesystem
+# Create setup script inside Ubuntu
 cat > ubuntu-fs/root/ubuntu_setup.sh << 'EOF'
 #!/bin/bash
 
@@ -36,11 +35,9 @@ fi
 nano bot_token.txt
 EOF
 
-# Make the script executable
 chmod +x ubuntu-fs/root/ubuntu_setup.sh
 
 echo ""
 echo "✅ Ubuntu installed!"
 echo "➡️ To continue, run: ./startubuntu.sh"
 echo "➡️ Then inside Ubuntu, run: bash ubuntu_setup.sh"
-
