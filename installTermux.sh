@@ -53,6 +53,7 @@ nano bot_token.txt
 EOF
 
 chmod +x ubuntu-fs/root/ubuntu_setup.sh
+chmod +x ./startubuntu.sh
 
 echo ""
 echo "✅ Ubuntu installed successfully!"
