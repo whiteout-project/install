@@ -39,4 +39,9 @@ Ubuntu/debian:
 WARNING, if you use ssh to start a session with your vps/ linux machine the bot will go offline when you turn off the session
 
 Android:
-Unfortunatly at this moment it's not possible to run the bot on android
+11. copy past the code below into your termux window
+pkg update && pkg upgrade -y
+pkg install wget
+wget https://raw.githubusercontent.com/whiteout-project/install/main/installTermux.sh
+chmod +x installTermux.sh
+bash installTermux.sh
