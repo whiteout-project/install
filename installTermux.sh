@@ -8,10 +8,10 @@ export PATH=$PREFIX/bin:$PATH
 # Initial update & install essential packages
 yes | pkg update
 yes | pkg upgrade
-yes | pkg install proot wget git curl termux-tools
+yes | pkg install proot git termux-tools
 
 # Confirm installation of required tools
-for cmd in git wget proot curl; do
+for cmd in git wget proot; do
   if ! command -v $cmd > /dev/null 2>&1; then
     echo "❌ $cmd not installed properly. Exiting."
     exit 1
