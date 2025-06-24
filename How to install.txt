@@ -25,12 +25,12 @@ WARNING, when you close the terminal or the computer your bot will go offline. Y
 Ubuntu/debian:
 11. If you have a specific folder you want to install go there otherwise type: mkdir wosbot && cd wosbot
 12. Type: apt update && upgrade -y
-13. Type: apt install python3 -y
+13. Type: apt install -y python3 python3-pip python3-venv
 14. Type: curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/main/install.py
-15. Type: python -m venv venv
-16. Type: python install.py and wait for the installtion to finish
+15. Type: python3 -m venv venv
+16. Type: python3 install.py and wait for the installtion to finish
 17. Type: source ./venv/bin/activate
-18. Type: python main.py --autoupdate
+18. Type: python3 main.py --autoupdate
 19. Wait until it ask you for your discord bot Token and here you paste the token you saved in step 8
 20. When it says the bot is ready go back to the discord developer portal, click the hamburger menu and go to Installation
 21. Copy the install link, now you can close the discord delvoper portal. Paste the link in your browser.
