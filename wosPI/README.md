@@ -32,4 +32,11 @@ For full bot setup instructions, please visit our [Discord server](https://disco
 3.  **🔧 Run /settings in Discord:**
     *   Remember to run /settings for the bot in Discord to configure yourself as the admin.
 
-For anyquestions feel free to check out our discord
+For any questions or suggestions feel free to check out our discord
+
+**Download links**
+
+   Raspberry PI 2(B) ----- coming soon
+   Raspberry PI 3(B) ----- coming soon
+   Raspberry PI 4    ----- coming soon
+   [Raspberry PI 5](https://drive.google.com/file/d/1FkO3QRyh7SWpVcrNBDPu6zfj_5Ziaimk/view?usp=sharing)
