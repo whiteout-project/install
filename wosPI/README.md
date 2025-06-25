@@ -21,12 +21,12 @@ For full bot setup instructions, please visit our [Discord server](https://disco
 
 2.  **▶️ Setup the bot:**
     *   Plug your pi in.
-    *   Open a terminal or command prompt, if you didn't change anything in the last step of step 1 the type: 'ssh wosland -l wosland' if you did change something type: 'ssh YOURHOSTNAME -l YOURUSERNAME'
-    *   After you got connected and logged in into your pi type: 'nano bot_token.txt' paste here your bot token (when using cmd right mouse click copies into the terminal) then ctrl + x and then y
+    *   Open a terminal or command prompt, if you didn't change anything in the last step of step 1 the type: `ssh wosland -l wosland` if you did change something type: `ssh YOURHOSTNAME -l YOURUSERNAME`
+    *   After you got connected and logged in into your pi type: `nano bot_token.txt` paste here your bot token (when using cmd right mouse click copies into the terminal) then ctrl + x and then y
 
 3.  **▶️ Start the Bot:**
-    *   Now you need to restart the bot do this by typing: 'sudo systemctl start wosbot'
-    *   Check if the bot is running by typing: 'systemctl status wosbot'
+    *   Now you need to restart the bot do this by typing: `sudo systemctl start wosbot`
+    *   Check if the bot is running by typing: `systemctl status wosbot`
     *   Now you can ivite the bot to your discord server if you haven't done that already
 
 3.  **🔧 Run /settings in Discord:**
@@ -37,5 +37,5 @@ For any questions or suggestions feel free to check out our discord
 **Download links**
 * Raspberry PI 2(B) ----- coming soon
 * Raspberry PI 3(B) ----- coming soon
-* Raspberry PI 4    ----- coming soon
+* [Raspberry PI 4](https://drive.google.com/file/d/1_uOgRQIJsOquKU6B4VYFNVeUWuZUrZjO/view?usp=sharing)
 * [Raspberry PI 5](https://drive.google.com/file/d/1FkO3QRyh7SWpVcrNBDPu6zfj_5Ziaimk/view?usp=sharing)
