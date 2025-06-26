@@ -1,12 +1,11 @@
 @echo off
-echo Hi! I'm clipie 2.0 and I will help you install or run your whitoutsurvival discord bot
-echo If main.py is missing I will use install.py to download and install the needed files
+echo Hi! I'm Clippy 2.0 and I will help you install or run your Whiteout Survival Discord Bot.
+echo If main.py is missing I will use install.py to download and install the needed files.
 echo :
 echo DO NOT TOUCH ANYTHING until you get asked for your bot token!
 echo :
-echo Not the first time, just press enter to skip all my talking ;)
-
-timeout 10
+echo Not your first time here? Just press enter to skip all my talking ;)
+timeout 15
 
 :startUpCheck
 IF EXIST main.py (
@@ -23,19 +22,18 @@ cls
 IF EXIST install.py (
 	py install.py
 	cls
-	echo woohoo first install step done, I will make a virtual enviroment now
-	echo be patient, this takes a minute
+	echo Woohoo! First install step done, I will make a virtual enviroment now.
+	echo Be patient, this takes a minute...
 	py -m venv bot_venv
 	cls
-	echo The enviroment is created, I wil continue with the initial startup
-	echo Ignore the scary text in blue you see later, it's all good I promise!
+	echo The enviroment is created, I will continue with the initial startup.
+	echo Ignore the scary text in blue you see later, it's all good, I promise!
 	echo :
-	echo ready for the next step?
+	echo Ready for the next step?
 	timeout 10
-	goto :startUpcheck
 	) ELSE (
 	echo :
-	echo I will download the latest install.py from github
+	echo I will download the latest install.py from GitHub...
 	timeout 5
 	curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/main/install.py
 	goto :firstInstall
@@ -44,21 +42,25 @@ IF EXIST install.py (
 :venvCheck
 IF EXIST bot_venv\ (
 	cls
-	echo The bot is going to start now
-	echo Are you excited? I know I'm!
+	echo The bot is going to start now.
+	echo Are you excited? I know I am!
 	echo :
     bot_venv\Scripts\python.exe main.py --autoupdate
+    echo.
+    echo Bot stopped. Restarting...
+    timeout 3
+    goto :venvCheck
 	) ELSE (
 	py -m venv bot_venv
 	echo :
-	echo Wooohoo enviroment is created, I will start the bot now!
+	echo Woohoo, the environment is created. I will start the bot now!
 	goto :venvCheck
 )
 
 :errorNoPython
 	cls
 	echo Oh no, it looks like you don't have python installed!
-	echo let's get that resolved for you
+	echo Don't worry, we will get that resolved for you now.
 	timeout 5
 	winget install -e python3
 	goto :firstInstall
