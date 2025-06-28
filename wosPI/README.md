@@ -35,7 +35,7 @@ For full bot setup instructions, please visit our [Discord server](https://disco
 For any questions or suggestions feel free to check out our discord
 
 **Download links**
-* Raspberry PI 2(B) ----- coming soon
-* Raspberry PI 3(B) ----- coming soon
-* [Raspberry PI 4](https://drive.google.com/file/d/1_uOgRQIJsOquKU6B4VYFNVeUWuZUrZjO/view?usp=sharing)
-* [Raspberry PI 5](https://drive.google.com/file/d/1FkO3QRyh7SWpVcrNBDPu6zfj_5Ziaimk/view?usp=sharing)
+* [Raspberry PI 2(B)](https://ikketim.nl/pi2)
+* [Raspberry PI 3(B)](https://ikketim.nl/pi3)
+* [Raspberry PI 4](https://ikketim.nl/pi4)
+* [Raspberry PI 5](https://ikketim.nl/pi5)
