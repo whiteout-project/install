@@ -138,6 +138,12 @@ if latest_release_data:
                 print(f"{F.RED}Failed to remove \"package\" directory. Please remove it manually.{R}")
                 
             print(f"{F.GREEN}Download complete from {source_name}!{R}")
+            
+            # Create version file to prevent immediate update check
+            print(f"{F.YELLOW}Creating version file...{R}")
+            with open("version", "w") as f:
+                f.write(latest_release_tag)
+            
             print(f"{F.YELLOW}Cleaning up...{R}")
             
             files_to_remove = [".gitignore", "LICENSE", "README.md", "install.py", ".gitlab-ci.yml"]
