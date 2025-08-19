@@ -146,7 +146,14 @@ if latest_release_data:
                 clean_up(file_name)
                 
             print(f"{F.GREEN}Cleanup complete!{R}")
-            print(f"{F.GREEN}Installation complete! Run your bot with \"python3 main.py\"!{R}")
+            
+            # Use platform-appropriate Python command
+            if sys.platform == "win32":
+                python_cmd = "python"
+            else:
+                python_cmd = "python3"
+            
+            print(f"{F.GREEN}Installation complete! Run your bot with \"{python_cmd} main.py\"!{R}")
         else:
             print(f"{F.RED}Failed to download from {source_name}: HTTP {download_resp.status_code}{R}")
             print(f"{F.RED}Please check your internet connection and try again.{R}")
