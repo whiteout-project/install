@@ -5,12 +5,25 @@ try:
     import colorama
     import requests
 except ImportError:
-    if "--debug" in sys.argv or "--verbose" in sys.argv: 
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200)
-    else:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    import colorama
-    import requests
+    print("Installing required packages...")
+    try:
+        if "--debug" in sys.argv or "--verbose" in sys.argv:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200)
+        else:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200, stdout=subprocess.DEVNULL)
+        # Refresh import paths to find newly installed packages
+        import importlib
+        importlib.invalidate_caches()
+        import site
+        site.main()
+        import colorama
+        import requests
+    except subprocess.CalledProcessError:
+        print("Failed to install packages. Please run manually: pip install colorama requests")
+        sys.exit(1)
+    except ImportError:
+        print("Failed to import packages after installation. Please run manually: pip install colorama requests")
+        sys.exit(1)
 
 import shutil
 import os
