@@ -9,9 +9,9 @@ except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200)
     else:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "colorama", "requests"], timeout=1200, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        import colorama
-        import requests
-        
+    import colorama
+    import requests
+
 import shutil
 import os
 
