@@ -2,7 +2,7 @@
 
 For full bot setup instructions, please visit our [Discord server](https://discord.gg/HFnNnQWnbS).
 
-## These files only works with the 4gb version of the pi's with a 32gb sd card
+## !!! These files only works with the 4gb version of the pi's with a 32gb sd card !!!
 Hopefully I soon have time to do it proper so it actually works for all pi's (and other hardware that can have a basic os image installed)
 
 # 🚀 Installation
