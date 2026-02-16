@@ -1,6 +1,6 @@
 @echo off
-echo Hi! I'm Clippy 2.0 and I will help you install or run your Whiteout Survival Discord Bot.
-echo If main.py is missing I will use install.py to download and install the needed files.
+echo Hi! I'm Clippy 2.0 and I will help you install or run your WOS or KS Discord Bot.
+echo If main.py is missing I will download and install the needed files.
 echo :
 echo DO NOT TOUCH ANYTHING until you get asked for your bot token!
 echo :
@@ -15,10 +15,13 @@ IF EXIST main.py (
 )
 
 :firstInstall
-py --version 3>NUL
-if errorlevel 1 goto :errorNoPython
-cls
+	winget install -e --id Python.Python.3.13 --silent --accept-package-agreements --accept-source-agreements
+	winget install -e --id Microsoft.VCRedist.2015+.x64 --silent --accept-package-agreements --accept-source-agreements
+	winget install -e --id Microsoft.VCRedist.2015+.x86 --silent --accept-package-agreements --accept-source-agreements
+	cls
+	goto :questionVersion
 
+:installWOS
 IF EXIST install.py (
 	py install.py
 	cls
@@ -31,13 +34,19 @@ IF EXIST install.py (
 	echo :
 	echo Ready for the next step?
 	timeout 10
+	goto :startUpCheck
 	) ELSE (
 	echo :
 	echo I will download the latest install.py from GitHub...
 	timeout 5
 	curl -o install.py https://raw.githubusercontent.com/whiteout-project/install/main/install.py
-	goto :firstInstall
+	goto :installWOS
 )
+
+:installKS
+	curl -o main.py https://raw.githubusercontent.com/kingshot-project/Kingshot-Discord-Bot/main/main.py
+	curl -o requirements.txt https://raw.githubusercontent.com/kingshot-project/Kingshot-Discord-Bot/main/requirements.txt
+	goto :venvCheck
 
 :venvCheck
 IF EXIST bot_venv\ (
@@ -64,3 +73,11 @@ IF EXIST bot_venv\ (
 	timeout 5
 	winget install -e python3
 	goto :firstInstall
+	
+:questionVersion
+	cls
+	echo For what game do you want to install the discord bot?
+	set /P INPUTA= For Whiteout survival type 1, for kingshot type 2: 
+	If /I “%INPUTA%”==“1” goto installWOS
+	If /I “%INPUTA%”==“2” goto installKS
+	echo Incorrect input & goto questionVersion
