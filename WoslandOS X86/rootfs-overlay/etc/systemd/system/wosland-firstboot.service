@@ -1,0 +1,16 @@
+[Unit]
+Description=WoslandOS First-Boot Setup
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/usr/local/bin/wosland-firstboot.sh
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wosland-firstboot.sh
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target
