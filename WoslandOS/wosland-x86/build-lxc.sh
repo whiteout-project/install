@@ -46,23 +46,26 @@ check_deps() {
 }
 
 download_template() {
-  info "Checking for Ubuntu 24.04 LXC template..."
-  # Find the template in available list
-  TEMPLATE=$(pveam available --section system 2>/dev/null | grep "ubuntu-24.04-standard" | tail -1 | awk '{print $2}')
-  if [ -z "$TEMPLATE" ]; then
-    warn "Could not auto-detect template, trying manual name..."
-    TEMPLATE="ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
+  info "Checking for Ubuntu 24.04 LXC template..." 
+  local tmpl_name
+  tmpl_name=$(pveam available --section system 2>/dev/null \
+    | grep "ubuntu-24.04-standard" | tail -1 | awk '{print $2}')
+
+  if [ -z "$tmpl_name" ]; then
+    tmpl_name="ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
   fi
 
-  # Download if not already present
   if ! pveam list local 2>/dev/null | grep -q "ubuntu-24.04"; then
-    info "Downloading template: ${TEMPLATE}"
-    pveam download local "$TEMPLATE"
+    info "Downloading template: ${tmpl_name}" 
+    pveam download local "$tmpl_name" >&2
+  else
+    info "Template already downloaded." 
   fi
-  # Always get the final template name from the local store in correct format
-  TEMPLATE=$(pveam list local 2>/dev/null | grep "ubuntu-24.04" | tail -1 | awk '{print $1}')
-  info "Using template: ${TEMPLATE}"
-  echo "$TEMPLATE"
+
+  # Return just the storage:vztmpl/filename reference
+  local final
+  final=$(pveam list local 2>/dev/null | grep "ubuntu-24.04" | tail -1 | awk '{print $1}')
+  echo "$final"
 }
 
 create_container() {
