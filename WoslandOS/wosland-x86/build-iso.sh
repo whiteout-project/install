@@ -40,8 +40,8 @@ trap cleanup EXIT
 check_deps() {
   info "Checking dependencies..."
   [ "$EUID" -eq 0 ] || error "Run as root: sudo ./build-iso.sh"
-  for cmd in xorriso wget openssl; do
-    command -v "$cmd" &>/dev/null || error "Missing: $cmd  →  sudo apt install xorriso wget openssl"
+  for cmd in xorriso wget openssl 7z; do
+    command -v "$cmd" &>/dev/null || error "Missing: $cmd\n  sudo apt install xorriso wget openssl p7zip-full"
   done
 }
 
@@ -51,10 +51,9 @@ download_iso() {
     info "Removing cached ISO..."
     rm -f "$BASE_ISO"
   fi
-  # New:
   if [ ! -f "$BASE_ISO" ]; then
     UBUNTU_ISO_URL=$(resolve_ubuntu_iso_url)
-    info "Downloading ${UBUNTU_ISO_URL##*/}..."
+  info "Downloading ${UBUNTU_ISO_URL##*/}..."
     wget --show-progress -O "$BASE_ISO" "$UBUNTU_ISO_URL"
   else
     info "Using cached base ISO."
@@ -63,12 +62,22 @@ download_iso() {
 
 extract_iso() {
   info "Extracting base ISO..."
-  mkdir -p "$EXTRACT_DIR" "$CUSTOM_DIR"
-  # Mount ISO read-only then rsync to writable dir
-  mount -o loop,ro "$BASE_ISO" "$EXTRACT_DIR"
-  rsync -a --exclude=/casper/filesystem.squashfs "$EXTRACT_DIR/" "$CUSTOM_DIR/"
-  cp "$EXTRACT_DIR/casper/filesystem.squashfs" "${CUSTOM_DIR}/casper/"
-  umount "$EXTRACT_DIR"
+  mkdir -p "$CUSTOM_DIR"
+
+  # Use 7z or xorriso -- avoids loop mount which fails in WSL2
+  if command -v 7z &>/dev/null; then
+    info "Extracting with 7z..."
+    7z x "$BASE_ISO" -o"$CUSTOM_DIR" -y > /dev/null
+  elif command -v xorriso &>/dev/null; then
+    info "Extracting with xorriso..."
+    xorriso -osirrox on -indev "$BASE_ISO" -extract / "$CUSTOM_DIR" 2>/dev/null
+  else
+    echo "ERROR: Need 7z or xorriso. Run: sudo apt install p7zip-full" >&2
+    exit 1
+  fi
+
+  chmod -R u+w "$CUSTOM_DIR"
+  info "ISO extracted: $(du -sh "$CUSTOM_DIR" | cut -f1)"
 }
 
 inject_autoinstall() {

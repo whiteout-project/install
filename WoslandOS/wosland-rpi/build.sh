@@ -69,7 +69,6 @@ download_base() {
   fi
   if [ ! -f "$BASE_IMG" ]; then
     info "Downloading Ubuntu ${UBUNTU_VERSION} Raspberry Pi image..."
-    UBUNTU_IMAGE_URL=$(resolve_ubuntu_image_url)
     wget --show-progress -O "$BASE_IMG" "$UBUNTU_IMAGE_URL"
   else
     info "Using cached base image."
