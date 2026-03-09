@@ -9,55 +9,60 @@ Both variants install the same stack automatically on first boot:
 
 ---
 
-## 📁 Repository Layout
+## Repository Layout
 
 ```
-wosland-os/
+WoslandOS/
 │
-├── README.md                  ← You are here
+├── README.md                  <- You are here
+├── LICENSE
+├── .gitignore
 │
-├── wosland-rpi/               ← Raspberry Pi (arm64)
-│   ├── config.sh              ← Edit this to update URLs / credentials
-│   ├── build.sh               ← Produces a .img.xz for Pi SD card
-│   ├── update-token.sh        ← Helper to update bot token on the Pi
-│   ├── rootfs-overlay/        ← Files injected into the image
-│   ├── webserver/app.py       ← Web control panel (Flask)
+├── wosland-rpi/               <- Raspberry Pi (arm64)
+│   ├── config.sh              <- Edit this to update URLs / credentials
+│   ├── build.sh               <- Produces a .img.xz for Pi SD card
+│   ├── update-token.sh        <- Helper to update bot token on the Pi
+│   ├── rootfs-overlay/        <- Files injected into the image
+│   ├── webserver/app.py       <- Web control panel (Flask)
 │   └── README.md
 │
-└── wosland-x86/               ← x86-64: bare metal / VM / Proxmox LXC
-    ├── config.sh              ← Edit this to update URLs / credentials
-    ├── build-iso.sh           ← Produces a fully unattended bootable ISO
-    ├── build-lxc.sh           ← Creates & provisions a Proxmox LXC container
-    ├── rootfs-overlay/        ← Files injected into target system
-    ├── webserver/app.py       ← Web control panel (Flask)
+└── wosland-x86/               <- x86-64: bare metal / VM / Proxmox LXC
+    ├── config.sh              <- Edit this to update URLs / credentials
+    ├── build-iso.sh           <- Produces a fully unattended bootable ISO
+    ├── build-lxc.sh           <- Creates & provisions a Proxmox LXC container
+    ├── iso-builder/           <- Autoinstall (cloud-init) templates
+    ├── rootfs-overlay/        <- Files injected into target system
+    ├── webserver/app.py       <- Web control panel (Flask)
     └── README.md
 ```
 
 ---
 
-## 🚀 Quick Pick
+## Quick Pick
 
 | I want to install on... | Use |
 |---|---|
-| Raspberry Pi 4 / 5 | [`wosland-rpi/`](wosland-rpi/README.md) |
-| Old PC / laptop | [`wosland-x86/`](wosland-x86/README.md) — ISO method |
-| Proxmox VM | [`wosland-x86/`](wosland-x86/README.md) — ISO method |
-| Proxmox LXC container | [`wosland-x86/`](wosland-x86/README.md) — LXC method |
+| Raspberry Pi 4 / 5 | [wosland-rpi/](wosland-rpi/README.md) |
+| Old PC / laptop | [wosland-x86/](wosland-x86/README.md) — ISO method |
+| Proxmox VM | [wosland-x86/](wosland-x86/README.md) — ISO method |
+| Proxmox LXC container | [wosland-x86/](wosland-x86/README.md) — LXC method |
 
 ---
 
-## 🌐 Web Control Panel (all variants)
+## Web Control Panel (all variants)
 
 After installation, open `http://<machine-ip>:8080` in any browser.
 
-- ▶ **Start / Stop / Restart** the WOSBot service
-- 🔑 **Update the bot token** — saves to `bot_token.txt` and auto-restarts the bot
-- 📋 **Live log viewer** — last 80 lines of journald output
-- 🟢 **Status indicator** — green = running, red = stopped/failed
+| Action | How |
+|---|---|
+| Start / Stop / Restart bot | Buttons in the Service card |
+| Update bot token | Paste in Bot Token card, click Save (auto-restarts bot) |
+| View live logs | Recent Logs card — last 80 lines |
+| Check service status | Green = running, Red = stopped/failed |
 
 ---
 
-## 🔄 Updating Repo Links
+## Updating Repo Links
 
 Each variant has its own `config.sh`. When bot URLs change, edit the relevant file and rebuild:
 
@@ -66,18 +71,18 @@ Each variant has its own `config.sh`. When bot URLs change, edit the relevant fi
 nano wosland-rpi/config.sh
 sudo wosland-rpi/build.sh
 
-# x86 — new ISO
+# x86 ISO
 nano wosland-x86/config.sh
 sudo wosland-x86/build-iso.sh
 
-# x86 — new Proxmox LXC container
+# x86 Proxmox LXC
 nano wosland-x86/config.sh
 sudo wosland-x86/build-lxc.sh
 ```
 
 ---
 
-## 🔐 Default Credentials (both variants)
+## Default Credentials
 
 | Service | Username | Password |
 |---|---|---|
@@ -85,8 +90,10 @@ sudo wosland-x86/build-lxc.sh
 | VNC | *(none)* | `W0sL@nd` |
 | Web panel | *(no auth)* | — |
 
+> Change the password after first login with `passwd`.
+
 ---
 
-## 📜 License
+## License
 
 MIT — see [LICENSE](LICENSE)
