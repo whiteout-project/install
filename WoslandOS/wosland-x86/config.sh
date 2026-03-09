@@ -11,7 +11,7 @@ OS_PASSWORD="W0sL@nd"
 OS_HOSTNAME="Wosland-os-server"
 
 # ── Source repository (update these when links change) ───────
-REPO_BASE="https://raw.githubusercontent.com/ikketim/install/"
+REPO_BASE="https://raw.githubusercontent.com/ikketim/install/main"
 
 BOT_MAIN_PY="https://raw.githubusercontent.com/whiteout-project/bot/main/main.py"
 BOT_INSTALL_PY="https://raw.githubusercontent.com/whiteout-project/install/main/install.py"
