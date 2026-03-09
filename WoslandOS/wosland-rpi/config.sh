@@ -27,8 +27,23 @@ TOKEN_FILE="${BOT_DIR}/bot_token.txt"
 WEBSERVER_DIR="/opt/wosland-webserver"
 WEBSERVER_PORT="8080"
 
-# ── Ubuntu base image ────────────────────────────────────────
-# Ubuntu Server for Raspberry Pi (arm64)
-UBUNTU_VERSION="24.04"
-UBUNTU_IMAGE_URL="https://cdimage.ubuntu.com/releases/24.04/release/ubuntu-24.04.2-preinstalled-server-arm64+raspi.img.xz"
+# -- Ubuntu base image ---------------------------------------
+# Only change UBUNTU_SERIES to switch LTS track (e.g. 22.04, 26.04).
+# The exact point-release image is auto-detected at build time.
+UBUNTU_SERIES="24.04"
 UBUNTU_IMAGE_FILE="ubuntu-raspi-base.img.xz"
+
+resolve_ubuntu_image_url() {
+  echo "Auto-detecting latest Ubuntu ${UBUNTU_SERIES} Raspberry Pi image..." >&2
+  local index_url="https://cdimage.ubuntu.com/releases/${UBUNTU_SERIES}/release/"
+  local img_name
+  img_name=$(wget -qO- "$index_url" \
+    | grep -oP "ubuntu-[0-9]+\.[0-9]+\.[0-9]+-preinstalled-server-arm64\+raspi\.img\.xz" \
+    | sort -V | tail -1)
+  if [ -z "$img_name" ]; then
+    echo "ERROR: Could not detect Ubuntu ${UBUNTU_SERIES} Raspberry Pi image from ${index_url}" >&2
+    exit 1
+  fi
+  echo "  -> ${img_name}" >&2
+  echo "${index_url}${img_name}"
+}
