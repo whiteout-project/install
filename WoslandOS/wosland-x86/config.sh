@@ -32,10 +32,27 @@ WEBSERVER_PORT="8080"
 #          mate  (classic desktop)
 DESKTOP="xfce"
 
-# ── Ubuntu base for ISO builds ───────────────────────────────
-UBUNTU_VERSION="24.04"
-UBUNTU_ISO_URL="https://releases.ubuntu.com/24.04/ubuntu-24.04.2-live-server-amd64.iso"
+# -- Ubuntu base for ISO builds ------------------------------
+# Only change UBUNTU_SERIES to switch LTS track (e.g. 22.04, 26.04).
+# The exact point-release ISO is auto-detected at build time.
+UBUNTU_SERIES="24.04"
 UBUNTU_ISO_FILE="ubuntu-server-base.iso"
+
+resolve_ubuntu_iso_url() {
+  echo "Auto-detecting latest Ubuntu ${UBUNTU_SERIES} ISO..." >&2
+  local index_url="https://releases.ubuntu.com/${UBUNTU_SERIES}/"
+  local iso_name
+  iso_name=$(wget -qO- "$index_url" \
+    | grep -oP "ubuntu-[0-9]+\.[0-9]+\.[0-9]+-live-server-amd64\.iso" \
+    | grep -v 'torrent|zsync' \
+    | sort -V | tail -1)
+  if [ -z "$iso_name" ]; then
+    echo "ERROR: Could not detect Ubuntu ${UBUNTU_SERIES} ISO from ${index_url}" >&2
+    exit 1
+  fi
+  echo "  -> ${iso_name}" >&2
+  echo "${index_url}${iso_name}"
+}
 
 # ── LXC template (for Proxmox builds) ───────────────────────
 # This is the Turnkey/Ubuntu template tag used by pveam
