@@ -58,10 +58,10 @@ download_template() {
   if ! pveam list local 2>/dev/null | grep -q "ubuntu-24.04"; then
     info "Downloading template: ${TEMPLATE}"
     pveam download local "$TEMPLATE"
-  else
-    info "Template already downloaded."
-    TEMPLATE=$(pveam list local 2>/dev/null | grep "ubuntu-24.04" | tail -1 | awk '{print $1}')
   fi
+  # Always get the final template name from the local store in correct format
+  TEMPLATE=$(pveam list local 2>/dev/null | grep "ubuntu-24.04" | tail -1 | awk '{print $1}')
+  info "Using template: ${TEMPLATE}"
   echo "$TEMPLATE"
 }
 
