@@ -46,7 +46,7 @@ check_deps() {
 }
 
 download_template() {
-  info "Checking for Ubuntu 24.04 LXC template..." 
+  info "Checking for Ubuntu 24.04 LXC template..." >&2
   local tmpl_name
   tmpl_name=$(pveam available --section system 2>/dev/null \
     | grep "ubuntu-24.04-standard" | tail -1 | awk '{print $2}')
@@ -56,10 +56,10 @@ download_template() {
   fi
 
   if ! pveam list local 2>/dev/null | grep -q "ubuntu-24.04"; then
-    info "Downloading template: ${tmpl_name}" 
+    info "Downloading template: ${tmpl_name}" >&2
     pveam download local "$tmpl_name" >&2
   else
-    info "Template already downloaded." 
+    info "Template already downloaded." >&2
   fi
 
   # Return just the storage:vztmpl/filename reference
