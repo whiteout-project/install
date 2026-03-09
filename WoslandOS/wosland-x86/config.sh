@@ -11,12 +11,12 @@ OS_PASSWORD="W0sL@nd"
 OS_HOSTNAME="Wosland-os-server"
 
 # -- Source repository (update these when links change) ------
-REPO_BASE="https://raw.githubusercontent.com/ikketim/install/3731ca18ecc8ce175cdd5549b8a5fe06084d164b"
+REPO_BASE="https://raw.githubusercontent.com/ikketim/install/main"
 
 BOT_MAIN_PY="https://raw.githubusercontent.com/whiteout-project/bot/main/main.py"
 BOT_INSTALL_PY="https://raw.githubusercontent.com/whiteout-project/install/main/install.py"
 
-BACKGROUND_IMAGE_URL="${REPO_BASE}/woslandOS/source/woslandOS.png"
+BACKGROUND_IMAGE_URL="${REPO_BASE}/woslandOS/etc/woslandOS.png"
 
 # -- Install paths (on the target machine) -------------------
 BOT_DIR="/home/${OS_USERNAME}/bot"
