@@ -51,8 +51,10 @@ download_iso() {
     info "Removing cached ISO..."
     rm -f "$BASE_ISO"
   fi
+  # New:
   if [ ! -f "$BASE_ISO" ]; then
-    info "Downloading Ubuntu ${UBUNTU_VERSION} server ISO..."
+    UBUNTU_ISO_URL=$(resolve_ubuntu_iso_url)
+    info "Downloading ${UBUNTU_ISO_URL##*/}..."
     wget --show-progress -O "$BASE_ISO" "$UBUNTU_ISO_URL"
   else
     info "Using cached base ISO."
