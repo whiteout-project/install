@@ -101,7 +101,7 @@ HTML = """<!DOCTYPE html>
 <header>
   <div>
     <h1>⚙️ WoslandOS Control Panel</h1>
-    <span>Raspberry Pi Bot Manager</span>
+    <span>WoslandOS Bot Service Manager</span>
   </div>
 </header>
 
