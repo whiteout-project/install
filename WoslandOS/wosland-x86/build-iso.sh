@@ -145,7 +145,7 @@ patch_grub() {
 set default="0"
 set timeout=5
 
-menuentry "WoslandOS — Automated Install" {
+menuentry "WoslandOS | Automated Install" {
     set gfxpayload=keep
     linux   /casper/vmlinuz quiet autoinstall "ds=nocloud;s=/cdrom/autoinstall/" ---
     initrd  /casper/initrd
