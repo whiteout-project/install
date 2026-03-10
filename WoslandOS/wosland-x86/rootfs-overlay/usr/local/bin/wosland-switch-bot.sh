@@ -192,7 +192,7 @@ EOF
     # Write token
     echo "${CURRENT_TOKEN}" > "$TOKEN_FILE"
     chown "${OS_USERNAME}:${OS_USERNAME}" "$TOKEN_FILE"
-    chmod 775 "$TOKEN_FILE"
+    chmod 640 "$TOKEN_FILE"
 
     # FIX #1: OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
     #         pthread_setaffinity_np errors in LXC/VM environments.
