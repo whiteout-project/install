@@ -89,7 +89,7 @@ create_container() {
     --memory "$CT_RAM" \
     --cores "$CT_CORES" \
     --net0 "$NET_ARG" \
-    --unprivileged 0 \
+    --unprivileged=0 \
     --features nesting=1 \
     --ostype ubuntu \
     --start 0
