@@ -54,11 +54,16 @@ echo "Stopping ${SERVICE_NAME}..."
 systemctl stop "$SERVICE_NAME" 2>/dev/null || true
 sleep 2
 
-# ── Remove old bot files (keep nothing from previous bot) ────
+#    Remove old bot files by nuking and recreating the
+#    directory, so hidden files like .git are also removed.
+#    The old approach (rm -rf ./*) left .git behind, causing
+#    "git clone . already exists" errors on subsequent switches.
+# ────────────────────────────────────────────────────────────
 echo "Removing old bot files from ${BOT_DIR}..."
 rm -rf "${BOT_DIR:?}"
 mkdir -p "$BOT_DIR"
 chown "${OS_USERNAME}:${OS_USERNAME}" "$BOT_DIR"
+chmod 755 "$BOT_DIR"
 
 # ── Install new bot ──────────────────────────────────────────
 case "$BOT_TYPE" in
@@ -83,6 +88,8 @@ case "$BOT_TYPE" in
     chmod 640 "$TOKEN_FILE"
 
     # Write service
+    #         OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
+    #         pthread_setaffinity_np errors in LXC/VM environments.
     cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=WOSBot (Whiteout Survival - Python)
@@ -110,7 +117,15 @@ EOF
     if ! node --version 2>/dev/null | grep -q "^v22"; then
       echo "Installing Node.js 22..."
       curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-      apt-get install -y -qq nodejs
+      apt-get install -y -qq nodejs git curl jq file unzip make gcc g++ python3 python3-dev python3-pip libtool wget
+    fi
+
+    #         Ensure build tools are present for native addons
+    #         (e.g. better-sqlite3 requires 'make' and gcc to
+    #         compile from source when no prebuilt binary exists).
+    if ! command -v make &>/dev/null; then
+      echo "Installing build tools (required for native Node addons)..."
+      apt-get install -y -qq build-essential python3-dev git curl jq file unzip make gcc g++ python-is-python3 python3-full libtool
     fi
 
     # Clone repo
@@ -177,8 +192,10 @@ EOF
     # Write token
     echo "${CURRENT_TOKEN}" > "$TOKEN_FILE"
     chown "${OS_USERNAME}:${OS_USERNAME}" "$TOKEN_FILE"
-    chmod 640 "$TOKEN_FILE"
+    chmod 775 "$TOKEN_FILE"
 
+    # FIX #1: OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
+    #         pthread_setaffinity_np errors in LXC/VM environments.
     cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=WOSBot (Kingshot)
