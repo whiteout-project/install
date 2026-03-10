@@ -93,6 +93,8 @@ WorkingDirectory=${BOT_DIR}
 Restart=always
 RestartSec=5
 User=${OS_USERNAME}
+Environment="OMP_NUM_THREADS=1"
+Environment="ONNXRUNTIME_NTHREADS=1"
 
 [Install]
 WantedBy=multi-user.target
@@ -187,6 +189,8 @@ WorkingDirectory=${BOT_DIR}
 Restart=always
 RestartSec=5
 User=${OS_USERNAME}
+Environment="OMP_NUM_THREADS=1"
+Environment="ONNXRUNTIME_NTHREADS=1"
 
 [Install]
 WantedBy=multi-user.target
