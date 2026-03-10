@@ -56,6 +56,7 @@ download_iso() {
 
 extract_iso() {
   info "Extracting base ISO..."
+  rm -rf "${CUSTOM_DIR}"
   mkdir -p "$CUSTOM_DIR"
 
   # Use 7z -- avoids loop mount, works on WSL2 and all Linux
@@ -88,6 +89,7 @@ inject_autoinstall() {
   PAYLOAD_DIR="${CUSTOM_DIR}/wosland"
   mkdir -p "$PAYLOAD_DIR"
 
+  # ── Substitute and copy wosland-provision.sh ───────────────
   sed \
     -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
     -e "s|@@OS_PASSWORD@@|${OS_PASSWORD}|g" \
@@ -111,6 +113,26 @@ inject_autoinstall() {
     > "${PAYLOAD_DIR}/wosland-provision.sh"
   chmod +x "${PAYLOAD_DIR}/wosland-provision.sh"
 
+  # ── FIX: Substitute and copy wosland-switch-bot.sh ─────────
+  # The original build-iso.sh never copied the switch-bot script
+  # into the ISO payload, so wosland-provision.sh would fail at
+  # step 13 with "No such file or directory" when trying to
+  # chmod +x /usr/local/bin/wosland-switch-bot.sh
+  sed \
+    -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
+    -e "s|@@BOT_DIR@@|${BOT_DIR}|g" \
+    -e "s|@@SERVICE_NAME@@|${SERVICE_NAME}|g" \
+    -e "s|@@TOKEN_FILE@@|${TOKEN_FILE}|g" \
+    -e "s|@@BOT_MAIN_PY@@|${BOT_MAIN_PY}|g" \
+    -e "s|@@BOT_INSTALL_PY@@|${BOT_INSTALL_PY}|g" \
+    -e "s|@@BOT_JS_REPO@@|${BOT_JS_REPO}|g" \
+    -e "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g" \
+    -e "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g" \
+    -e "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g" \
+    "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-switch-bot.sh" \
+    > "${PAYLOAD_DIR}/wosland-switch-bot.sh"
+  chmod +x "${PAYLOAD_DIR}/wosland-switch-bot.sh"
+
   cp "${SCRIPT_DIR}/webserver/app.py" "${PAYLOAD_DIR}/app.py"
   cp "${SCRIPT_DIR}/rootfs-overlay/etc/systemd/system/wosland-firstboot.service" \
      "${PAYLOAD_DIR}/wosland-firstboot.service"
@@ -121,6 +143,7 @@ patch_grub() {
 
   GRUB_CFG="${CUSTOM_DIR}/boot/grub/grub.cfg"
   [ -f "$GRUB_CFG" ] || GRUB_CFG="${CUSTOM_DIR}/grub/grub.cfg"
+  [ -f "$GRUB_CFG" ] || error "Could not find grub.cfg in extracted ISO."
 
   AUTOINSTALL_ENTRY='
 set default="0"

@@ -31,14 +31,14 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 cleanup() {
   info "Cleaning up mounts..."
   sync || true
-  umount "${MOUNT_ROOT}/proc"       2>/dev/null || true
-  umount "${MOUNT_ROOT}/sys"        2>/dev/null || true
-  umount "${MOUNT_ROOT}/dev/pts"    2>/dev/null || true
-  umount "${MOUNT_ROOT}/dev"        2>/dev/null || true
+  umount "${MOUNT_ROOT}/proc"          2>/dev/null || true
+  umount "${MOUNT_ROOT}/sys"           2>/dev/null || true
+  umount "${MOUNT_ROOT}/dev/pts"       2>/dev/null || true
+  umount "${MOUNT_ROOT}/dev"           2>/dev/null || true
   umount "${MOUNT_ROOT}/boot/firmware" 2>/dev/null || true
-  umount "${MOUNT_ROOT}"            2>/dev/null || true
-  umount "${MOUNT_BOOT}"            2>/dev/null || true
-  kpartx -d "$WORK_IMG"             2>/dev/null || true
+  umount "${MOUNT_ROOT}"               2>/dev/null || true
+  umount "${MOUNT_BOOT}"               2>/dev/null || true
+  kpartx -d "$WORK_IMG"                2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -102,25 +102,39 @@ inject_overlay() {
   cp -r "${OVERLAY}/." "${MOUNT_ROOT}/"
 
   FIRSTBOOT="${MOUNT_ROOT}/usr/local/bin/wosland-firstboot.sh"
-  sed -i "s|@@OS_USERNAME@@|${OS_USERNAME}|g"                   "$FIRSTBOOT"
-  sed -i "s|@@OS_PASSWORD@@|${OS_PASSWORD}|g"                   "$FIRSTBOOT"
-  sed -i "s|@@OS_HOSTNAME@@|${OS_HOSTNAME}|g"                   "$FIRSTBOOT"
-  sed -i "s|@@BOT_MAIN_PY@@|${BOT_MAIN_PY}|g"                  "$FIRSTBOOT"
-  sed -i "s|@@BOT_INSTALL_PY@@|${BOT_INSTALL_PY}|g"            "$FIRSTBOOT"
-  sed -i "s|@@BOT_JS_REPO@@|${BOT_JS_REPO}|g"                  "$FIRSTBOOT"
-  sed -i "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g"              "$FIRSTBOOT"
-  sed -i "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g"      "$FIRSTBOOT"
-  sed -i "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g"  "$FIRSTBOOT"
-  sed -i "s|@@DEFAULT_BOT@@|${DEFAULT_BOT}|g"                  "$FIRSTBOOT"
+
+  # FIX: @@SERVICE_FILE@@ was referenced in sed substitutions but
+  # never defined in config.sh, leaving a raw placeholder in the
+  # provisioned image. Removed the broken substitution line.
+  # VENV_DIR is derived from BOT_DIR so it is substituted here
+  # explicitly rather than relying on config.sh to export it.
+  local VENV_DIR="${BOT_DIR}/venv"
+
+  sed -i "s|@@OS_USERNAME@@|${OS_USERNAME}|g"                    "$FIRSTBOOT"
+  sed -i "s|@@OS_PASSWORD@@|${OS_PASSWORD}|g"                    "$FIRSTBOOT"
+  sed -i "s|@@OS_HOSTNAME@@|${OS_HOSTNAME}|g"                    "$FIRSTBOOT"
+  sed -i "s|@@BOT_MAIN_PY@@|${BOT_MAIN_PY}|g"                   "$FIRSTBOOT"
+  sed -i "s|@@BOT_INSTALL_PY@@|${BOT_INSTALL_PY}|g"             "$FIRSTBOOT"
+  sed -i "s|@@BOT_JS_REPO@@|${BOT_JS_REPO}|g"                   "$FIRSTBOOT"
+  sed -i "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g"               "$FIRSTBOOT"
+  sed -i "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g"       "$FIRSTBOOT"
+  sed -i "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g"   "$FIRSTBOOT"
+  sed -i "s|@@DEFAULT_BOT@@|${DEFAULT_BOT}|g"                   "$FIRSTBOOT"
   sed -i "s|@@BACKGROUND_IMAGE_URL@@|${BACKGROUND_IMAGE_URL}|g" "$FIRSTBOOT"
-  sed -i "s|@@BOT_DIR@@|${BOT_DIR}|g"                          "$FIRSTBOOT"
-  sed -i "s|@@VENV_DIR@@|${VENV_DIR}|g"                        "$FIRSTBOOT"
-  sed -i "s|@@SERVICE_NAME@@|${SERVICE_NAME}|g"                 "$FIRSTBOOT"
-  sed -i "s|@@SERVICE_FILE@@|${SERVICE_FILE}|g"                 "$FIRSTBOOT"
-  sed -i "s|@@TOKEN_FILE@@|${TOKEN_FILE}|g"                     "$FIRSTBOOT"
-  sed -i "s|@@WEBSERVER_DIR@@|${WEBSERVER_DIR}|g"               "$FIRSTBOOT"
-  sed -i "s|@@WEBSERVER_PORT@@|${WEBSERVER_PORT}|g"             "$FIRSTBOOT"
-  # Also substitute switch-bot script
+  sed -i "s|@@BOT_DIR@@|${BOT_DIR}|g"                           "$FIRSTBOOT"
+  sed -i "s|@@VENV_DIR@@|${VENV_DIR}|g"                         "$FIRSTBOOT"
+  sed -i "s|@@SERVICE_NAME@@|${SERVICE_NAME}|g"                  "$FIRSTBOOT"
+  sed -i "s|@@TOKEN_FILE@@|${TOKEN_FILE}|g"                      "$FIRSTBOOT"
+  sed -i "s|@@WEBSERVER_DIR@@|${WEBSERVER_DIR}|g"                "$FIRSTBOOT"
+  sed -i "s|@@WEBSERVER_PORT@@|${WEBSERVER_PORT}|g"              "$FIRSTBOOT"
+  # NOTE: @@SERVICE_FILE@@ removed -- it was never defined in config.sh
+  #       and left a raw placeholder in the provisioned image.
+  #       If wosland-firstboot.sh references @@SERVICE_FILE@@, replace
+  #       those occurrences with @@SERVICE_NAME@@ in that script.
+
+  chmod +x "$FIRSTBOOT"
+
+  # ── Substitute switch-bot script ────────────────────────────
   SWITCHBOT="${MOUNT_ROOT}/usr/local/bin/wosland-switch-bot.sh"
   if [ -f "$SWITCHBOT" ]; then
     sed -i "s|@@OS_USERNAME@@|${OS_USERNAME}|g"                  "$SWITCHBOT"
@@ -134,13 +148,20 @@ inject_overlay() {
     sed -i "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g"     "$SWITCHBOT"
     sed -i "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g" "$SWITCHBOT"
     chmod +x "$SWITCHBOT"
+  else
+    warn "wosland-switch-bot.sh not found in rootfs-overlay -- skipping substitution"
   fi
-  chmod +x "$FIRSTBOOT"
 
   WEBSERVER_DEST="${MOUNT_ROOT}${WEBSERVER_DIR}"
   mkdir -p "$WEBSERVER_DEST"
   cp "${SCRIPT_DIR}/webserver/app.py" "$WEBSERVER_DEST/"
   chmod +x "${WEBSERVER_DEST}/app.py"
+
+  # ── Ensure all injected scripts have Unix line endings ───────
+  # Prevents /usr/bin/env: 'bash\r' errors if scripts were edited
+  # on Windows or built from WSL against a Windows filesystem.
+  find "${MOUNT_ROOT}/usr/local/bin" -name "*.sh" \
+    -exec sed -i 's/\r//' {} + 2>/dev/null || true
 
   info "Overlay injection complete."
 }
@@ -169,13 +190,14 @@ finalize() {
   echo ""
   echo -e "  Image: ${YELLOW}${FINAL_IMG}.xz${NC}"
   echo -e "  Flash: ${YELLOW}xzcat ${FINAL_IMG}.xz | sudo dd of=/dev/sdX bs=4M status=progress${NC}"
+  echo "  Or use Raspberry Pi Imager with the 'Use custom' option."
   echo ""
 }
 
 main() {
   echo ""
   echo -e "${GREEN}╔══════════════════════════════════════════════╗${NC}"
-  echo -e "${GREEN}║        WoslandOS Image Builder               ║${NC}"
+  echo -e "${GREEN}║        WoslandOS RPi Image Builder           ║${NC}"
   echo -e "${GREEN}╚══════════════════════════════════════════════╝${NC}"
   echo ""
   check_deps
