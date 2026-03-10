@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 # ============================================================
-# WoslandOS -- Bot Switcher
+# WoslandOS -- Bot Switcher (Raspberry Pi / ARM64 edition)
 # Called by the web dashboard. Switches between:
 #   wos-py   -- Whiteout Survival Python bot
 #   wos-js   -- Whiteout Survival JavaScript bot (Node 22)
 #   kingshot -- Kingshot Discord bot (Python)
 #
 # Usage: wosland-switch-bot.sh <bot-type>
+#
+# RPi changes vs x86 version:
+#   - Node 22 is installed via direct binary from nodejs.org
+#     instead of NodeSource (NodeSource is unreliable on ARM64
+#     Raspberry Pi OS Bookworm and may serve wrong arch or fail)
+#   - Architecture is auto-detected (arm64 / armv7l)
+#   - Node binary is installed to /opt/nodejs and symlinked
 # ============================================================
 set -euo pipefail
 
@@ -20,6 +27,9 @@ JS_ENV_FILE="${BOT_DIR}/src/.env"
 BOT_TYPE_FILE="${BOT_DIR}/.bot_type"
 LOG="/var/log/wosland-switch.log"
 
+# Node 22 version to install (update as needed)
+NODE_VERSION="22.11.0"
+
 # Bot repo URLs (substituted at build time)
 BOT_MAIN_PY="@@BOT_MAIN_PY@@"
 BOT_INSTALL_PY="@@BOT_INSTALL_PY@@"
@@ -30,7 +40,7 @@ BOT_KINGSHOT_BRANCH="@@BOT_KINGSHOT_BRANCH@@"
 
 exec > >(tee -a "$LOG") 2>&1
 echo "========================================"
-echo " Bot Switcher: ${BOT_TYPE}"
+echo " Bot Switcher (RPi): ${BOT_TYPE}"
 echo " $(date)"
 echo "========================================"
 
@@ -54,11 +64,10 @@ echo "Stopping ${SERVICE_NAME}..."
 systemctl stop "$SERVICE_NAME" 2>/dev/null || true
 sleep 2
 
-#    Remove old bot files by nuking and recreating the
-#    directory, so hidden files like .git are also removed.
-#    The old approach (rm -rf ./*) left .git behind, causing
-#    "git clone . already exists" errors on subsequent switches.
-# ────────────────────────────────────────────────────────────
+# ── Remove old bot files cleanly ────────────────────────────
+# Nuke and recreate the directory so hidden files like .git
+# are fully removed, preventing "git clone . already exists"
+# errors on subsequent bot switches.
 echo "Removing old bot files from ${BOT_DIR}..."
 rm -rf "${BOT_DIR:?}"
 mkdir -p "$BOT_DIR"
@@ -87,9 +96,8 @@ case "$BOT_TYPE" in
     chown "${OS_USERNAME}:${OS_USERNAME}" "$TOKEN_FILE"
     chmod 640 "$TOKEN_FILE"
 
-    # Write service
-    #         OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
-    #         pthread_setaffinity_np errors in LXC/VM environments.
+    # OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
+    # pthread_setaffinity_np errors on RPi (limited CPU affinity control)
     cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=WOSBot (Whiteout Survival - Python)
@@ -113,19 +121,67 @@ EOF
   wos-js)
     echo "Installing WOS JavaScript bot..."
 
-    # Ensure Node 22 is available
+    # ── Node 22 install: direct binary method (RPi-safe) ────
+    # NodeSource's setup_22.x script is unreliable on RPi ARM64
+    # Bookworm. Instead we download the official nodejs.org binary
+    # directly, which has proper arm64 and armv7l builds.
+    install_node_rpi() {
+      local ver="$NODE_VERSION"
+
+      # Detect architecture
+      local arch
+      case "$(uname -m)" in
+        aarch64) arch="arm64" ;;
+        armv7l)  arch="armv7l" ;;
+        x86_64)  arch="x64" ;;
+        *)
+          echo "ERROR: Unsupported architecture: $(uname -m)"
+          exit 1
+          ;;
+      esac
+
+      echo "Detected architecture: ${arch}"
+      echo "Installing Node.js ${ver} (${arch}) from nodejs.org..."
+
+      local tarball="node-v${ver}-linux-${arch}.tar.xz"
+      local url="https://nodejs.org/dist/v${ver}/${tarball}"
+
+      # Remove any old apt-installed nodejs to avoid conflicts
+      apt-get remove -y nodejs npm 2>/dev/null || true
+      apt-get autoremove -y 2>/dev/null || true
+      rm -rf /opt/nodejs
+
+      # Download and extract
+      cd /tmp
+      wget -q -O "${tarball}" "${url}"
+      tar -xJf "${tarball}"
+      mkdir -p /opt/nodejs
+      mv "node-v${ver}-linux-${arch}"/* /opt/nodejs/
+      rm -rf "node-v${ver}-linux-${arch}" "${tarball}"
+
+      # Symlink into /usr/local/bin so node/npm are on PATH
+      ln -sf /opt/nodejs/bin/node   /usr/local/bin/node
+      ln -sf /opt/nodejs/bin/npm    /usr/local/bin/npm
+      ln -sf /opt/nodejs/bin/npx    /usr/local/bin/npx
+
+      echo "Node.js installed: $(node --version)"
+      echo "npm installed:     $(npm --version)"
+    }
+
+    # Only install if Node 22 is not already present
     if ! node --version 2>/dev/null | grep -q "^v22"; then
-      echo "Installing Node.js 22..."
-      curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-      apt-get install -y -qq nodejs git curl jq file unzip make gcc g++ python3 python3-dev python3-pip libtool wget
+      install_node_rpi
+    else
+      echo "Node.js 22 already present: $(node --version)"
     fi
 
-    #         Ensure build tools are present for native addons
-    #         (e.g. better-sqlite3 requires 'make' and gcc to
-    #         compile from source when no prebuilt binary exists).
+    # Ensure build tools are present for native addons
+    # (better-sqlite3 requires 'make' and gcc to compile from
+    # source when no prebuilt binary matches the runtime version)
     if ! command -v make &>/dev/null; then
       echo "Installing build tools (required for native Node addons)..."
-      apt-get install -y -qq build-essential python3-dev git curl jq file unzip make gcc g++ python-is-python3 python3-full libtool
+      apt-get install -y -qq build-essential python3-dev git curl \
+        jq file unzip python-is-python3 python3-full libtool wget
     fi
 
     # Clone repo
@@ -134,7 +190,8 @@ EOF
     chown -R "${OS_USERNAME}:${OS_USERNAME}" "$BOT_DIR"
 
     # Install npm dependencies
-    sudo -u "$OS_USERNAME" npm install --prefix "$BOT_DIR"
+    # Use the full path to npm from /opt/nodejs to be safe on RPi
+    sudo -u "$OS_USERNAME" /opt/nodejs/bin/npm install --prefix "$BOT_DIR"
 
     # Write .env with token
     mkdir -p "${BOT_DIR}/src"
@@ -159,12 +216,13 @@ Description=WOSBot (Whiteout Survival - JavaScript)
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/node ${BOT_DIR}/${ENTRY}
+ExecStart=/opt/nodejs/bin/node ${BOT_DIR}/${ENTRY}
 WorkingDirectory=${BOT_DIR}
 Restart=always
 RestartSec=5
 User=${OS_USERNAME}
 Environment=NODE_ENV=production
+Environment=PATH=/opt/nodejs/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target
@@ -194,8 +252,8 @@ EOF
     chown "${OS_USERNAME}:${OS_USERNAME}" "$TOKEN_FILE"
     chmod 640 "$TOKEN_FILE"
 
-    # FIX #1: OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
-    #         pthread_setaffinity_np errors in LXC/VM environments.
+    # OMP_NUM_THREADS / ONNXRUNTIME_NTHREADS prevent
+    # pthread_setaffinity_np errors on RPi (limited CPU affinity control)
     cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=WOSBot (Kingshot)
