@@ -56,8 +56,9 @@ sleep 2
 
 # ── Remove old bot files (keep nothing from previous bot) ────
 echo "Removing old bot files from ${BOT_DIR}..."
-rm -rf "${BOT_DIR:?}"/*
-rm -f "${BOT_DIR}/.bot_type" "${BOT_DIR}/.env"
+rm -rf "${BOT_DIR:?}"
+mkdir -p "$BOT_DIR"
+chown "${OS_USERNAME}:${OS_USERNAME}" "$BOT_DIR"
 
 # ── Install new bot ──────────────────────────────────────────
 case "$BOT_TYPE" in
