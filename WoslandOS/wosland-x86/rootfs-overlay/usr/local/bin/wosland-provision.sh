@@ -228,7 +228,7 @@ EOF
 # -- 13. Web control panel
 echo "[13/13] Installing web control panel..."
 mkdir -p "$WEBSERVER_DIR"
-chmod 775 "$BOT_DIR"
+chmod -R 775 "$BOT_DIR"
 chmod 666 "$TOKEN_FILE" 2>/dev/null || true
 
 # switch-bot script is pre-substituted by build-lxc.sh / build-iso.sh
