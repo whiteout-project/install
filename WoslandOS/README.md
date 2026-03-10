@@ -200,7 +200,7 @@ Key variables in `config.sh`:
 | `BOT_KINGSHOT_REPO` | Kingshot bot Git repo URL |
 | `DEFAULT_BOT` | Bot installed on first boot: `wos-py` / `wos-js` / `kingshot` |
 | `DESKTOP` | Desktop environment: `xfce` / `lxde` / `mate` |
-| `UBUNTU_SERIES` | Ubuntu LTS track e.g. `24.04` — point release auto-detected |
+| `UBUNTU_SERIES` | Ubuntu LTS track e.g. `24.04` — 24.xx release auto-detected |
 | `WEBSERVER_PORT` | Web panel port (default `8080`) |
 
 ---
