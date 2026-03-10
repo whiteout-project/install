@@ -1,7 +1,0 @@
-build-tmp/
-output/
-*.img
-*.iso
-*.img.xz
-__pycache__/
-*.pyc
