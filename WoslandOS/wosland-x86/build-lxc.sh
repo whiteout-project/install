@@ -6,7 +6,9 @@
 # Usage:
 #   ./build-lxc.sh
 #   ./build-lxc.sh --ctid 200
+#   ./build-lxc.sh --ctid 200 --unprivileged 0
 #   CT_IP="192.168.1.50/24" CT_GW="192.168.1.1" ./build-lxc.sh --ctid 200
+#   CT_UNPRIVILEGED=0 ./build-lxc.sh
 # ============================================================
 set -euo pipefail
 
@@ -23,6 +25,7 @@ CT_BRIDGE="${CT_BRIDGE:-vmbr0}"
 CT_VLAN="${CT_VLAN:-}"
 CT_IP="${CT_IP:-dhcp}"
 CT_GW="${CT_GW:-}"
+CT_UNPRIVILEGED="${CT_UNPRIVILEGED:-1}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 info()  { echo -e "${GREEN}[LXC]${NC}  $*"; }
@@ -31,8 +34,10 @@ error() { echo -e "${RED}[ERR]${NC}  $*"; exit 1; }
 
 for arg in "$@"; do
   case $arg in
-    --ctid=*) CTID="${arg#*=}" ;;
-    --ctid)   shift; CTID="$1" ;;
+    --ctid=*)         CTID="${arg#*=}" ;;
+    --ctid)           shift; CTID="$1" ;;
+    --unprivileged=*) CT_UNPRIVILEGED="${arg#*=}" ;;
+    --unprivileged)   shift; CT_UNPRIVILEGED="$1" ;;
   esac
 done
 
@@ -45,7 +50,6 @@ check_deps() {
 download_template() {
   info "Checking for Ubuntu 24.04 LXC template..." >&2
 
-  # Find template name from available list
   local tmpl_name
   tmpl_name=$(pveam available --section system 2>/dev/null \
     | grep "ubuntu-24.04-standard" | tail -1 | awk '{print $2}')
@@ -54,7 +58,6 @@ download_template() {
     tmpl_name="ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
   fi
 
-  # Download if not already present
   if ! pveam list local 2>/dev/null | grep -q "ubuntu-24.04"; then
     info "Downloading template: ${tmpl_name}" >&2
     pveam download local "$tmpl_name" >&2
@@ -62,7 +65,6 @@ download_template() {
     info "Template already downloaded." >&2
   fi
 
-  # Return ONLY the storage:vztmpl/filename reference -- nothing else to stdout
   local final
   final=$(pveam list local 2>/dev/null | grep "ubuntu-24.04" | tail -1 | awk '{print $1}')
   echo "$final"
@@ -70,7 +72,7 @@ download_template() {
 
 create_container() {
   local template="$1"
-  info "Creating LXC container (ID: ${CTID})..."
+  info "Creating LXC container (ID: ${CTID}, unprivileged: ${CT_UNPRIVILEGED})..."
 
   NET_ARG="name=eth0,bridge=${CT_BRIDGE}"
   if [ "$CT_IP" = "dhcp" ]; then
@@ -89,7 +91,7 @@ create_container() {
     --memory "$CT_RAM" \
     --cores "$CT_CORES" \
     --net0 "$NET_ARG" \
-    --unprivileged=0 \
+    --unprivileged "$CT_UNPRIVILEGED" \
     --features nesting=1 \
     --ostype ubuntu \
     --start 0
@@ -124,18 +126,37 @@ inject_and_run() {
     -e "s|@@WEBSERVER_PORT@@|${WEBSERVER_PORT}|g" \
     "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-provision.sh" \
     > "$PROVISION_TMP"
-
   pct push "$CTID" "$PROVISION_TMP" /usr/local/bin/wosland-provision.sh --perms 0755
   rm -f "$PROVISION_TMP"
 
-  # Substitute and push switch-bot script
   SWITCH_TMP=$(mktemp)
-  sed     -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g"     -e "s|@@BOT_DIR@@|${BOT_DIR}|g"     -e "s|@@SERVICE_NAME@@|${SERVICE_NAME}|g"     -e "s|@@TOKEN_FILE@@|${TOKEN_FILE}|g"     -e "s|@@BOT_MAIN_PY@@|${BOT_MAIN_PY}|g"     -e "s|@@BOT_INSTALL_PY@@|${BOT_INSTALL_PY}|g"     -e "s|@@BOT_JS_REPO@@|${BOT_JS_REPO}|g"     -e "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g"     -e "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g"     -e "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g"     "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-switch-bot.sh"     > "$SWITCH_TMP"
+  sed \
+    -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
+    -e "s|@@BOT_DIR@@|${BOT_DIR}|g" \
+    -e "s|@@SERVICE_NAME@@|${SERVICE_NAME}|g" \
+    -e "s|@@TOKEN_FILE@@|${TOKEN_FILE}|g" \
+    -e "s|@@BOT_MAIN_PY@@|${BOT_MAIN_PY}|g" \
+    -e "s|@@BOT_INSTALL_PY@@|${BOT_INSTALL_PY}|g" \
+    -e "s|@@BOT_JS_REPO@@|${BOT_JS_REPO}|g" \
+    -e "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g" \
+    -e "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g" \
+    -e "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g" \
+    "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-switch-bot.sh" \
+    > "$SWITCH_TMP"
   pct push "$CTID" "$SWITCH_TMP" /usr/local/bin/wosland-switch-bot.sh --perms 0755
   rm -f "$SWITCH_TMP"
 
   pct exec "$CTID" -- mkdir -p "$WEBSERVER_DIR"
   pct push "$CTID" "${SCRIPT_DIR}/webserver/app.py" "${WEBSERVER_DIR}/app.py" --perms 0755
+
+  # pct push runs as host root. In an unprivileged container the host UID mapping
+  # means pushed files may not be owned by container root. Fix ownership explicitly
+  # inside the container so provisioning and the webserver start without errors.
+  info "Fixing file ownership inside container..."
+  pct exec "$CTID" -- chown root:root \
+    /usr/local/bin/wosland-provision.sh \
+    /usr/local/bin/wosland-switch-bot.sh \
+    "${WEBSERVER_DIR}/app.py"
 
   info "Running provisioning (this takes 5-15 minutes)..."
   info "Follow logs: pct exec ${CTID} -- tail -f /var/log/wosland-setup.log"
@@ -150,8 +171,9 @@ inject_and_run() {
   echo -e "${GREEN}║   WoslandOS LXC container ready!                  ║${NC}"
   echo -e "${GREEN}╚═══════════════════════════════════════════════════╝${NC}"
   echo ""
-  echo -e "  Container ID : ${YELLOW}${CTID}${NC}"
-  echo -e "  IP Address   : ${YELLOW}${CT_ASSIGNED_IP}${NC}"
+  echo -e "  Container ID  : ${YELLOW}${CTID}${NC}"
+  echo -e "  Unprivileged  : ${YELLOW}${CT_UNPRIVILEGED}${NC}"
+  echo -e "  IP Address    : ${YELLOW}${CT_ASSIGNED_IP}${NC}"
   echo ""
   echo -e "  Web panel : ${YELLOW}http://${CT_ASSIGNED_IP}:${WEBSERVER_PORT}${NC}"
   echo -e "  SSH       : ${YELLOW}ssh ${OS_USERNAME}@${CT_ASSIGNED_IP}${NC}"
