@@ -143,9 +143,12 @@ sudo -u "$OS_USERNAME" "$VENV_DIR/bin/python3" install.py || true
 rm -f install.py
 chown -R "${OS_USERNAME}:${OS_USERNAME}" "$BOT_DIR"
 chmod 755 "$BOT_DIR"
+
+# Token: readable by both root (webserver) and OS_USERNAME (bot)
 if [ ! -f "$TOKEN_FILE" ]; then echo "" > "$TOKEN_FILE"; fi
 chown "${OS_USERNAME}:${OS_USERNAME}" "$TOKEN_FILE"
-chmod 640 "$TOKEN_FILE"
+chmod 644 "$TOKEN_FILE"
+
 echo "$DEFAULT_BOT" > "${BOT_DIR}/.bot_type"
 chown "${OS_USERNAME}:${OS_USERNAME}" "${BOT_DIR}/.bot_type"
 
@@ -208,28 +211,26 @@ EOF
 # -- 13. Web control panel & switch-bot script
 echo "[13/13] Installing web control panel..."
 mkdir -p "$WEBSERVER_DIR"
-chmod 775 "$BOT_DIR"
-chmod 666 "$TOKEN_FILE" 2>/dev/null || true
+chown root:root "$WEBSERVER_DIR"
+chmod 755 "$WEBSERVER_DIR"
 
-# Substitute switch-bot script
-SWITCH_SRC="/usr/local/bin/wosland-switch-bot.sh"
-sed -i \
-  -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
-  -e "s|@@BOT_DIR@@|${BOT_DIR}|g" \
-  -e "s|@@SERVICE_NAME@@|${SERVICE_NAME}|g" \
-  -e "s|@@TOKEN_FILE@@|${TOKEN_FILE}|g" \
-  -e "s|@@BOT_MAIN_PY@@|${BOT_MAIN_PY}|g" \
-  -e "s|@@BOT_INSTALL_PY@@|${BOT_INSTALL_PY}|g" \
-  -e "s|@@BOT_JS_REPO@@|${BOT_JS_REPO}|g" \
-  -e "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g" \
-  -e "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g" \
-  -e "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g" \
-  "$SWITCH_SRC"
-chmod +x "$SWITCH_SRC"
+# Ensure app.py is owned by root (service runs as root)
+chown root:root "${WEBSERVER_DIR}/app.py" 2>/dev/null || true
+chmod 755 "${WEBSERVER_DIR}/app.py" 2>/dev/null || true
+
+# Ensure bot dir and token are accessible by both root and OS_USERNAME
+chmod 755 "$BOT_DIR"
+chmod 644 "$TOKEN_FILE" 2>/dev/null || true
+
+# switch-bot is already substituted by build.sh at image build time
+chown root:root /usr/local/bin/wosland-switch-bot.sh
+chmod 755 /usr/local/bin/wosland-switch-bot.sh
 
 mkdir -p /etc/wosland
 touch /etc/wosland/gui_enabled  # GUI enabled by default on Pi
 
+# Web service runs as root so it can call systemctl, write token, run switch-bot.
+# No ExecStartPre needed — permissions are set correctly above at provision time.
 cat > /etc/systemd/system/wosland-web.service <<WEBEOF
 [Unit]
 Description=WoslandOS Web Control Panel
@@ -240,12 +241,11 @@ WorkingDirectory=${WEBSERVER_DIR}
 Restart=always
 RestartSec=5
 User=root
-Environment=WOSLAND_USER=${OS_USERNAME}
+Environment=OS_USERNAME=${OS_USERNAME}
 Environment=BOT_DIR=${BOT_DIR}
 Environment=TOKEN_FILE=${TOKEN_FILE}
 Environment=SERVICE_NAME=${SERVICE_NAME}
 Environment=PORT=${WEBSERVER_PORT}
-ExecStartPre=/bin/bash -c 'touch ${TOKEN_FILE} && chmod 666 ${TOKEN_FILE} && chown ${OS_USERNAME}:${OS_USERNAME} ${TOKEN_FILE}'
 [Install]
 WantedBy=multi-user.target
 WEBEOF
