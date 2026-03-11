@@ -27,7 +27,9 @@ if [ -z "$TOKEN" ]; then
 fi
 
 echo "$TOKEN" > "$TOKEN_FILE"
-chmod 640 "$TOKEN_FILE"
+# 644: readable by root (webserver) and wosland (bot), consistent with
+# permissions set during provisioning and by app.py after token saves.
+chmod 644 "$TOKEN_FILE"
 chown "wosland:wosland" "$TOKEN_FILE"
 echo -e "${GREEN}Token saved.${NC}"
 
