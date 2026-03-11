@@ -107,7 +107,6 @@ X-GNOME-Autostart-enabled=true
 EOF
 chown -R "${OS_USERNAME}:${OS_USERNAME}" "/home/${OS_USERNAME}/.config"
 
-# XFCE wallpaper
 mkdir -p "/home/${OS_USERNAME}/.config/xfce4/xfconf/xfce-perchannel-xml"
 cat > "/home/${OS_USERNAME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -144,7 +143,7 @@ EOF
 chmod +x "${DESKTOP_DIR}/WoslandOS-Panel.desktop"
 chown -R "${OS_USERNAME}:${OS_USERNAME}" "$DESKTOP_DIR"
 
-# -- 9. Bot installation (default: wos-py)
+# -- 9. Bot installation
 echo "[9/13] Installing WOSBot (${DEFAULT_BOT})..."
 mkdir -p "$BOT_DIR"
 cd "$BOT_DIR"
@@ -162,11 +161,11 @@ rm -f install.py
 chown -R "${OS_USERNAME}:${OS_USERNAME}" "$BOT_DIR"
 chmod 755 "$BOT_DIR"
 
+# Token file: owned by OS_USERNAME, readable by root (webserver runs as root)
 if [ ! -f "$TOKEN_FILE" ]; then echo "" > "$TOKEN_FILE"; fi
 chown "${OS_USERNAME}:${OS_USERNAME}" "$TOKEN_FILE"
-chmod 640 "$TOKEN_FILE"
+chmod 644 "$TOKEN_FILE"
 
-# Record active bot type
 echo "$DEFAULT_BOT" > "${BOT_DIR}/.bot_type"
 chown "${OS_USERNAME}:${OS_USERNAME}" "${BOT_DIR}/.bot_type"
 
@@ -230,23 +229,34 @@ EOF
 # -- 13. Web control panel
 echo "[13/13] Installing web control panel..."
 mkdir -p "$WEBSERVER_DIR"
-chmod -R 775 "$BOT_DIR"
-chmod 666 "$TOKEN_FILE" 2>/dev/null || true
+chown root:root "$WEBSERVER_DIR"
+chmod 755 "$WEBSERVER_DIR"
 
-# switch-bot script is pre-substituted by build-lxc.sh / build-iso.sh
-chmod +x /usr/local/bin/wosland-switch-bot.sh
+# Ensure app.py is owned by root (the service runs as root)
+chown root:root "${WEBSERVER_DIR}/app.py" 2>/dev/null || true
+chmod 755 "${WEBSERVER_DIR}/app.py" 2>/dev/null || true
 
-# -- Create GUI flag dir
+# Ensure bot dir is accessible by both the bot user and root (webserver)
+chmod -R 755 "$BOT_DIR"
+# Token must be readable/writable by both root (webserver) and OS_USERNAME (bot)
+chmod 644 "$TOKEN_FILE" 2>/dev/null || true
+
+# switch-bot script is pre-substituted and pushed by build-lxc.sh
+chown root:root /usr/local/bin/wosland-switch-bot.sh
+chmod 755 /usr/local/bin/wosland-switch-bot.sh
+
 mkdir -p /etc/wosland
-# Enable GUI by default on non-LXC
 if [ "$IS_LXC" -eq 0 ]; then
   touch /etc/wosland/gui_enabled
 fi
 
+# Web service runs as root so it can call systemctl, write token, run switch-bot.
+# No ExecStartPre needed — permissions are set correctly at provision time above.
 cat > /etc/systemd/system/wosland-web.service <<EOF
 [Unit]
 Description=WoslandOS Web Control Panel
 After=network.target
+
 [Service]
 ExecStart=/usr/bin/python3 ${WEBSERVER_DIR}/app.py
 WorkingDirectory=${WEBSERVER_DIR}
@@ -257,7 +267,8 @@ Environment=SERVICE_NAME=${SERVICE_NAME}
 Environment=BOT_DIR=${BOT_DIR}
 Environment=TOKEN_FILE=${TOKEN_FILE}
 Environment=PORT=${WEBSERVER_PORT}
-ExecStartPre=/bin/bash -c 'touch ${TOKEN_FILE} && chmod 666 ${TOKEN_FILE} && chown ${OS_USERNAME}:${OS_USERNAME} ${TOKEN_FILE}'
+Environment=OS_USERNAME=${OS_USERNAME}
+
 [Install]
 WantedBy=multi-user.target
 EOF
