@@ -14,6 +14,7 @@ SERVICE_NAME  = os.environ.get("SERVICE_NAME", "wosbot")
 BOT_DIR       = os.environ.get("BOT_DIR",      "/home/wosland/bot")
 TOKEN_FILE    = os.environ.get("TOKEN_FILE",   "/home/wosland/bot/bot_token.txt")
 PORT          = int(os.environ.get("PORT",     "8080"))
+OS_USERNAME   = os.environ.get("OS_USERNAME",  "wosland")
 SWITCH_SCRIPT = "/usr/local/bin/wosland-switch-bot.sh"
 BOT_TYPE_FILE = f"{BOT_DIR}/.bot_type"
 JS_ENV_FILE   = f"{BOT_DIR}/src/.env"
@@ -29,6 +30,16 @@ def run(cmd, timeout=10):
         return (r.stdout + r.stderr).strip()
     except Exception as e:
         return str(e)
+
+
+def chown_to_user(path):
+    """Restore ownership to OS_USERNAME after root writes a file."""
+    try:
+        import pwd
+        pw = pwd.getpwnam(OS_USERNAME)
+        os.chown(path, pw.pw_uid, pw.pw_gid)
+    except Exception:
+        pass
 
 
 def service_status():
@@ -193,7 +204,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
 .log-box::-webkit-scrollbar-track{background:#050810}
 .log-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-/* Modals */
 .overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(5,8,16,.88);backdrop-filter:blur(4px);align-items:center;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:30px;max-width:400px;width:90%;position:relative}
@@ -204,7 +214,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
 .modal-body strong{color:var(--accent2)}
 .modal-btns{display:flex;gap:9px;justify-content:center}
 
-/* Switch overlay */
 .sw-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(5,8,16,.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;flex-direction:column;gap:18px}
 .sw-overlay.open{display:flex}
 .spinner{width:46px;height:46px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
@@ -232,7 +241,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
 </header>
 
 <main>
-  <!-- Service Control -->
   <div class="card">
     <div class="card-title"><span class="ic">⚡</span> Service Control</div>
     <div class="svc-row">
@@ -247,7 +255,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
     </div>
   </div>
 
-  <!-- Token -->
   <div class="card">
     <div class="card-title"><span class="ic">🔑</span> Bot Token</div>
     <div class="inp-wrap">
@@ -263,7 +270,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
     </p>
   </div>
 
-  <!-- Bot Selection -->
   <div class="card full">
     <div class="card-title"><span class="ic">🤖</span> Bot Selection</div>
     <div class="bot-list">
@@ -295,7 +301,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
     </div>
   </div>
 
-  <!-- Desktop -->
   <div class="card">
     <div class="card-title"><span class="ic">🖥</span> Desktop &amp; GUI</div>
     <div class="tgl-row">
@@ -320,7 +325,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
     </div>
   </div>
 
-  <!-- Logs -->
   <div class="card">
     <div class="card-title">
       <span class="ic">📋</span> Recent Logs
@@ -330,7 +334,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
   </div>
 </main>
 
-<!-- Modal 1 -->
 <div class="overlay" id="m1">
   <div class="modal">
     <div class="modal-icon">⚠️</div>
@@ -343,7 +346,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
   </div>
 </div>
 
-<!-- Modal 2 -->
 <div class="overlay" id="m2">
   <div class="modal">
     <div class="modal-icon">🚨</div>
@@ -356,7 +358,6 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20p
   </div>
 </div>
 
-<!-- Switch overlay -->
 <div class="sw-overlay" id="sw-ov">
   <div class="spinner"></div>
   <div class="sw-title">Switching bot… please wait</div>
@@ -507,9 +508,11 @@ def api_token_set():
             lines.insert(0, f"TOKEN={token}")
             ep.write_text("\n".join(lines) + "\n")
             os.chmod(JS_ENV_FILE, 0o640)
+            chown_to_user(JS_ENV_FILE)
         else:
             Path(TOKEN_FILE).write_text(token + "\n")
             os.chmod(TOKEN_FILE, 0o640)
+            chown_to_user(TOKEN_FILE)
     except Exception as e:
         return jsonify({"ok":False,"message":str(e)}), 500
     run(f"systemctl restart {SERVICE_NAME}", timeout=10)
