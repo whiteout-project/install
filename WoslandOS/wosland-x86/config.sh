@@ -50,9 +50,13 @@ resolve_ubuntu_iso_url() {
   echo "Auto-detecting latest Ubuntu ${UBUNTU_SERIES} ISO..." >&2
   local index_url="https://releases.ubuntu.com/${UBUNTU_SERIES}/"
   local iso_name
+  # FIX: original used grep -v 'torrent|zsync' which treats | as a literal
+  # character, not regex alternation -- so .torrent files were never filtered.
+  # grep -vE correctly interprets | as alternation. Same fix already present
+  # in config-wsl.sh.
   iso_name=$(wget -qO- "$index_url" \
     | grep -oP "ubuntu-[0-9]+\.[0-9]+\.[0-9]+-live-server-amd64\.iso" \
-    | grep -v 'torrent|zsync' \
+    | grep -vE 'torrent|zsync' \
     | sort -V | tail -1)
   if [ -z "$iso_name" ]; then
     echo "ERROR: Could not detect Ubuntu ${UBUNTU_SERIES} ISO from ${index_url}" >&2
