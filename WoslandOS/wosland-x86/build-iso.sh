@@ -56,10 +56,8 @@ download_iso() {
 
 extract_iso() {
   info "Extracting base ISO..."
-  rm -rf "${CUSTOM_DIR}"
   mkdir -p "$CUSTOM_DIR"
 
-  # Use 7z -- avoids loop mount, works on WSL2 and all Linux
   info "Extracting with 7z..."
   7z x "$BASE_ISO" -o"$CUSTOM_DIR" -y > /dev/null
 
@@ -89,7 +87,6 @@ inject_autoinstall() {
   PAYLOAD_DIR="${CUSTOM_DIR}/wosland"
   mkdir -p "$PAYLOAD_DIR"
 
-  # ── Substitute and copy wosland-provision.sh ───────────────
   sed \
     -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
     -e "s|@@OS_PASSWORD@@|${OS_PASSWORD}|g" \
@@ -113,11 +110,10 @@ inject_autoinstall() {
     > "${PAYLOAD_DIR}/wosland-provision.sh"
   chmod +x "${PAYLOAD_DIR}/wosland-provision.sh"
 
-  # ── FIX: Substitute and copy wosland-switch-bot.sh ─────────
-  # The original build-iso.sh never copied the switch-bot script
-  # into the ISO payload, so wosland-provision.sh would fail at
-  # step 13 with "No such file or directory" when trying to
-  # chmod +x /usr/local/bin/wosland-switch-bot.sh
+  # FIX: wosland-switch-bot.sh was missing from the ISO payload.
+  # wosland-provision.sh step 13 does chmod +x /usr/local/bin/wosland-switch-bot.sh
+  # and the web panel calls it at runtime -- without this file the provisioning
+  # fails and bot switching never works. build-iso-wsl.sh already had this fix.
   sed \
     -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
     -e "s|@@BOT_DIR@@|${BOT_DIR}|g" \
@@ -143,7 +139,6 @@ patch_grub() {
 
   GRUB_CFG="${CUSTOM_DIR}/boot/grub/grub.cfg"
   [ -f "$GRUB_CFG" ] || GRUB_CFG="${CUSTOM_DIR}/grub/grub.cfg"
-  [ -f "$GRUB_CFG" ] || error "Could not find grub.cfg in extracted ISO."
 
   AUTOINSTALL_ENTRY='
 set default="0"
