@@ -1,3 +1,4 @@
+```yaml
 #cloud-config
 autoinstall:
   version: 1
@@ -36,8 +37,11 @@ autoinstall:
   late-commands:
     - cp /cdrom/wosland/wosland-provision.sh /target/usr/local/bin/wosland-provision.sh
     - chmod +x /target/usr/local/bin/wosland-provision.sh
+    - cp /cdrom/wosland/wosland-switch-bot.sh /target/usr/local/bin/wosland-switch-bot.sh
+    - chmod +x /target/usr/local/bin/wosland-switch-bot.sh
     - mkdir -p /target/@@WEBSERVER_DIR@@
     - cp /cdrom/wosland/app.py /target/@@WEBSERVER_DIR@@/app.py
     - cp /cdrom/wosland/wosland-firstboot.service /target/etc/systemd/system/wosland-firstboot.service
     - curtin in-target --target=/target -- systemctl enable wosland-firstboot.service
   shutdown: reboot
+```
