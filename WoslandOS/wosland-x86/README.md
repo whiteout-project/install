@@ -178,6 +178,11 @@ CT_IP="192.168.1.50/24" CT_GW="192.168.1.1" sudo ./build-lxc.sh --ctid 150
 CT_STORAGE=local CT_RAM=2048 CT_CORES=2 CT_DISK_SIZE=25 sudo ./build-lxc.sh
 ```
 
+**Privileged container (not recommended):**
+```bash
+sudo ./build-lxc.sh --unprivileged 0
+```
+
 The script:
 1. Downloads the Ubuntu 24.04 LXC template from Proxmox's repository (if not already cached)
 2. Creates the container with `nesting=1` features enabled (required for systemd)
@@ -199,6 +204,7 @@ The script:
 | `CT_VLAN` | *(none)* | VLAN tag (optional) |
 | `CT_IP` | `dhcp` | IP/CIDR or `dhcp` |
 | `CT_GW` | *(none)* | Gateway (required for static IP) |
+| `CT_UNPRIVILEGED` | `1` | Run as unprivileged container (`0` to disable) |
 
 ### Step 3 — Access
 
