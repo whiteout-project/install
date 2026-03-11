@@ -35,6 +35,10 @@ BACKGROUND_IMAGE_URL="${REPO_BASE}/WoslandOS/etc/woslandOS.png"
 BOT_DIR="/home/${OS_USERNAME}/bot"
 VENV_DIR="${BOT_DIR}/venv"
 SERVICE_NAME="wosbot"
+# FIX: SERVICE_FILE was used as @@SERVICE_FILE@@ in wosland-firstboot.sh
+# but was never defined here, causing the wosbot service unit to be written
+# to an empty path and never installed correctly.
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 TOKEN_FILE="${BOT_DIR}/bot_token.txt"
 WEBSERVER_DIR="/opt/wosland-webserver"
 WEBSERVER_PORT="8080"
@@ -52,7 +56,7 @@ resolve_ubuntu_iso_url() {
   local iso_name
   iso_name=$(wget -qO- "$index_url" \
     | grep -oP "ubuntu-[0-9]+\.[0-9]+\.[0-9]+-live-server-amd64\.iso" \
-    | grep -v 'torrent|zsync' \
+    | grep -vE 'torrent|zsync' \
     | sort -V | tail -1)
   if [ -z "$iso_name" ]; then
     echo "ERROR: Could not detect Ubuntu ${UBUNTU_SERIES} ISO from ${index_url}" >&2
@@ -65,7 +69,7 @@ resolve_ubuntu_iso_url() {
 # -- LXC template --------------------------------------------
 LXC_TEMPLATE="ubuntu-24.04-standard"
 
-# -- Ubuntu Pi image (replaces ISO section for Pi builds) ----
+# -- Ubuntu Pi image -----------------------------------------
 UBUNTU_IMAGE_FILE="ubuntu-raspi-base.img.xz"
 
 resolve_ubuntu_image_url() {
