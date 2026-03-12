@@ -1,0 +1,45 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  storage:
+    layout:
+      name: lvm
+      match:
+        size: largest
+  identity:
+    hostname: @@OS_HOSTNAME@@
+    username: @@OS_USERNAME@@
+    password: "@@OS_PASSWORD_HASH@@"
+    realname: "Wosland OS"
+  ssh:
+    install-server: true
+    allow-pw: true
+  packages:
+    - python3
+    - python3-full
+    - python3-venv
+    - python3-pip
+    - python3-flask
+    - wget
+    - curl
+    - git
+    - feh
+    - x11vnc
+    - xvfb
+    - net-tools
+    - jq
+    - ca-certificates
+    - p7zip-full
+  late-commands:
+    - cp /cdrom/wosland/wosland-provision.sh /target/usr/local/bin/wosland-provision.sh
+    - chmod +x /target/usr/local/bin/wosland-provision.sh
+    - cp /cdrom/wosland/wosland-switch-bot.sh /target/usr/local/bin/wosland-switch-bot.sh
+    - chmod +x /target/usr/local/bin/wosland-switch-bot.sh
+    - mkdir -p /target/@@WEBSERVER_DIR@@
+    - cp /cdrom/wosland/app.py /target/@@WEBSERVER_DIR@@/app.py
+    - cp /cdrom/wosland/wosland-firstboot.service /target/etc/systemd/system/wosland-firstboot.service
+    - curtin in-target --target=/target -- systemctl enable wosland-firstboot.service
+  shutdown: reboot

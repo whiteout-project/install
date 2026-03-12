@@ -1,0 +1,13 @@
+[Unit]
+Description=WOSBot
+After=network.target
+
+[Service]
+ExecStart=/home/wosland/bot/venv/bin/python3 /home/wosland/bot/main.py --autoupdate
+WorkingDirectory=/home/wosland/bot
+Restart=always
+RestartSec=5
+User=wosland
+
+[Install]
+WantedBy=multi-user.target
