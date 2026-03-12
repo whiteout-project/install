@@ -1,4 +1,3 @@
-```yaml
 #cloud-config
 autoinstall:
   version: 1
@@ -44,4 +43,3 @@ autoinstall:
     - cp /cdrom/wosland/wosland-firstboot.service /target/etc/systemd/system/wosland-firstboot.service
     - curtin in-target --target=/target -- systemctl enable wosland-firstboot.service
   shutdown: reboot
-```

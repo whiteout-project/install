@@ -58,6 +58,7 @@ extract_iso() {
   info "Extracting base ISO..."
   mkdir -p "$CUSTOM_DIR"
 
+  # Use 7z -- avoids loop mount, works on WSL2 and all Linux
   info "Extracting with 7z..."
   7z x "$BASE_ISO" -o"$CUSTOM_DIR" -y > /dev/null
 
@@ -110,10 +111,7 @@ inject_autoinstall() {
     > "${PAYLOAD_DIR}/wosland-provision.sh"
   chmod +x "${PAYLOAD_DIR}/wosland-provision.sh"
 
-  # FIX: wosland-switch-bot.sh was missing from the ISO payload.
-  # wosland-provision.sh step 13 does chmod +x /usr/local/bin/wosland-switch-bot.sh
-  # and the web panel calls it at runtime -- without this file the provisioning
-  # fails and bot switching never works. build-iso-wsl.sh already had this fix.
+  # Substitute and copy switch-bot script into payload
   sed \
     -e "s|@@OS_USERNAME@@|${OS_USERNAME}|g" \
     -e "s|@@BOT_DIR@@|${BOT_DIR}|g" \
@@ -125,6 +123,10 @@ inject_autoinstall() {
     -e "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g" \
     -e "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g" \
     -e "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g" \
+    -e "s|@@VENV_DIR@@|${VENV_DIR}|g" \
+    -e "s|@@DEFAULT_BOT@@|${DEFAULT_BOT}|g" \
+    -e "s|@@BACKGROUND_IMAGE_URL@@|${BACKGROUND_IMAGE_URL}|g" \
+    -e "s|@@DESKTOP@@|${DESKTOP}|g" \
     "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-switch-bot.sh" \
     > "${PAYLOAD_DIR}/wosland-switch-bot.sh"
   chmod +x "${PAYLOAD_DIR}/wosland-switch-bot.sh"

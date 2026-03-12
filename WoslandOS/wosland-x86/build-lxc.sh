@@ -6,9 +6,8 @@
 # Usage:
 #   ./build-lxc.sh
 #   ./build-lxc.sh --ctid 200
-#   ./build-lxc.sh --ctid 200 --unprivileged 0
+#   ./build-lxc.sh --unprivileged 0   -- force privileged container
 #   CT_IP="192.168.1.50/24" CT_GW="192.168.1.1" ./build-lxc.sh --ctid 200
-#   CT_UNPRIVILEGED=0 ./build-lxc.sh
 # ============================================================
 set -euo pipefail
 
@@ -91,7 +90,7 @@ create_container() {
     --memory "$CT_RAM" \
     --cores "$CT_CORES" \
     --net0 "$NET_ARG" \
-    --unprivileged "$CT_UNPRIVILEGED" \
+    --unprivileged="${CT_UNPRIVILEGED}" \
     --features nesting=1 \
     --ostype ubuntu \
     --start 0
@@ -126,6 +125,7 @@ inject_and_run() {
     -e "s|@@WEBSERVER_PORT@@|${WEBSERVER_PORT}|g" \
     "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-provision.sh" \
     > "$PROVISION_TMP"
+
   pct push "$CTID" "$PROVISION_TMP" /usr/local/bin/wosland-provision.sh --perms 0755
   rm -f "$PROVISION_TMP"
 
@@ -141,6 +141,10 @@ inject_and_run() {
     -e "s|@@BOT_JS_BRANCH@@|${BOT_JS_BRANCH}|g" \
     -e "s|@@BOT_KINGSHOT_REPO@@|${BOT_KINGSHOT_REPO}|g" \
     -e "s|@@BOT_KINGSHOT_BRANCH@@|${BOT_KINGSHOT_BRANCH}|g" \
+    -e "s|@@VENV_DIR@@|${VENV_DIR}|g" \
+    -e "s|@@DEFAULT_BOT@@|${DEFAULT_BOT}|g" \
+    -e "s|@@BACKGROUND_IMAGE_URL@@|${BACKGROUND_IMAGE_URL}|g" \
+    -e "s|@@DESKTOP@@|${DESKTOP}|g" \
     "${SCRIPT_DIR}/rootfs-overlay/usr/local/bin/wosland-switch-bot.sh" \
     > "$SWITCH_TMP"
   pct push "$CTID" "$SWITCH_TMP" /usr/local/bin/wosland-switch-bot.sh --perms 0755
@@ -149,10 +153,9 @@ inject_and_run() {
   pct exec "$CTID" -- mkdir -p "$WEBSERVER_DIR"
   pct push "$CTID" "${SCRIPT_DIR}/webserver/app.py" "${WEBSERVER_DIR}/app.py" --perms 0755
 
-  # pct push runs as host root. In an unprivileged container the host UID mapping
-  # means pushed files may not be owned by container root. Fix ownership explicitly
-  # inside the container so provisioning and the webserver start without errors.
-  info "Fixing file ownership inside container..."
+  # Fix ownership inside container after all pct push calls.
+  # This is required for unprivileged containers where the host uid mapping
+  # means pushed files may not be owned by root inside the container.
   pct exec "$CTID" -- chown root:root \
     /usr/local/bin/wosland-provision.sh \
     /usr/local/bin/wosland-switch-bot.sh \
@@ -171,9 +174,8 @@ inject_and_run() {
   echo -e "${GREEN}║   WoslandOS LXC container ready!                  ║${NC}"
   echo -e "${GREEN}╚═══════════════════════════════════════════════════╝${NC}"
   echo ""
-  echo -e "  Container ID  : ${YELLOW}${CTID}${NC}"
-  echo -e "  Unprivileged  : ${YELLOW}${CT_UNPRIVILEGED}${NC}"
-  echo -e "  IP Address    : ${YELLOW}${CT_ASSIGNED_IP}${NC}"
+  echo -e "  Container ID : ${YELLOW}${CTID}${NC}"
+  echo -e "  IP Address   : ${YELLOW}${CT_ASSIGNED_IP}${NC}"
   echo ""
   echo -e "  Web panel : ${YELLOW}http://${CT_ASSIGNED_IP}:${WEBSERVER_PORT}${NC}"
   echo -e "  SSH       : ${YELLOW}ssh ${OS_USERNAME}@${CT_ASSIGNED_IP}${NC}"
